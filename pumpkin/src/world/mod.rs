@@ -48,8 +48,8 @@ use pumpkin_registry::DimensionType;
 use pumpkin_util::math::vector2::Vector2;
 use pumpkin_util::math::{position::BlockPos, vector3::Vector3};
 use pumpkin_util::text::{TextComponent, color::NamedColor};
-use pumpkin_world::chunk::ChunkData;
 use pumpkin_world::level::Level;
+use pumpkin_world::{block::BlockDirection, chunk::ChunkData};
 use pumpkin_world::{
     block::registry::{
         get_block_and_state_by_state_id, get_block_by_state_id, get_state_by_state_id,
@@ -1198,5 +1198,42 @@ impl World {
     pub async fn schedule_block_tick(&self, pos: &BlockPos, delay: usize) {
         let mut scheduled_block_ticks = self.scheduled_block_ticks.lock().await;
         scheduled_block_ticks.push((delay, pos.clone()));
+    }
+
+    pub async fn get_emitted_redstone_power(
+        &self,
+        pos: &BlockPos,
+        direction: &BlockDirection,
+        only_from_gate: bool,
+        server: &Server,
+    ) -> u8 {
+        let (block, state) = self.get_block_and_block_state(pos).await.unwrap();
+
+        if only_from_gate {
+            if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block) {
+                if !pumpkin_block.is_gate() {
+                    return 0;
+                } else {
+                    return pumpkin_block.get_strong_redstone_power(state, self, pos, direction);
+                }
+            }
+        } else if block.name == "redstone_block" {
+            return 15;
+        } else if block.name == "redstone_wire" {
+            let states = server
+                .block_properties_manager
+                .get_states(block, state)
+                .await;
+            let power = states[2].clone();
+            return power.parse::<u8>().unwrap();
+        } else {
+            if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block) {
+                if !pumpkin_block.emits_redstone_power(state) {
+                    return pumpkin_block.get_strong_redstone_power(state, self, pos, direction);
+                }
+            }
+        }
+
+        0
     }
 }

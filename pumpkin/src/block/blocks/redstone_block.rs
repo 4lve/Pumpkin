@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use pumpkin_macros::pumpkin_block;
 use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::block::{
-    registry::State, BlockState
+    registry::State, BlockDirection, BlockState
 };
 
 use crate::{
@@ -21,10 +21,10 @@ impl PumpkinBlock for RedstoneBlock {
 
     fn get_weak_redstone_power(
         &self,
-        _block_state: &BlockState,
+        _block_state: &State,
         _world: &World,
         _pos: &BlockPos,
-        _direction: &Direction,
+        _direction: &BlockDirection,
     ) -> u8 {
         15
     }

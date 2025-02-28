@@ -10,7 +10,8 @@ use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::block::{
     BlockDirection,
     registry::{
-        Block, State, get_block_by_state_id, get_block_collision_shapes, is_side_solid, is_solid,
+        BLOCKS_BY_ID, Block, State, get_block_by_state_id, get_block_collision_shapes,
+        is_side_solid, is_solid,
     },
 };
 
@@ -20,16 +21,23 @@ use crate::{
     world::World,
 };
 
-const WIRE_CONNECTION_EAST: usize = 0;
-const WIRE_CONNECTION_NORTH: usize = 1;
-const WIRE_CONNECTION_POWER_LEVEL: usize = 2;
-const WIRE_CONNECTION_SOUTH: usize = 3;
-const WIRE_CONNECTION_WEST: usize = 4;
-const REPEATER_FACING: usize = 1;
+pub const WIRE_CONNECTION_EAST: usize = 0;
+pub const WIRE_CONNECTION_NORTH: usize = 1;
+pub const WIRE_CONNECTION_POWER_LEVEL: usize = 2;
+pub const WIRE_CONNECTION_SOUTH: usize = 3;
+pub const WIRE_CONNECTION_WEST: usize = 4;
+pub const REPEATER_FACING: usize = 1;
 const OBSERVER_FACING: usize = 0;
 // Okay, this is really confusing, in source code dot state is when it has all sides connected
 const DOT_STATE: [&str; 5] = ["side", "side", "0", "side", "side"];
 const DEFAULT_STATE: [&str; 5] = ["none", "none", "0", "none", "none"];
+
+pub async fn redstone_controller_update(_block: &Block, _pos: &BlockPos, _world: &World, _server: &Server, _state: &State, _block_added: bool) {
+
+
+    
+
+}
 
 pub fn is_connected(state: &str) -> bool {
     state != North::None.value()
@@ -47,6 +55,16 @@ pub fn is_not_fully_connected(states: &Vec<String>) -> bool {
         && !is_connected(states[WIRE_CONNECTION_NORTH].as_str())
         && !is_connected(states[WIRE_CONNECTION_SOUTH].as_str())
         && !is_connected(states[WIRE_CONNECTION_WEST].as_str());
+}
+
+pub fn get_property_index(direction: BlockDirection) -> usize {
+    match direction {
+        BlockDirection::North => WIRE_CONNECTION_NORTH,
+        BlockDirection::South => WIRE_CONNECTION_SOUTH,
+        BlockDirection::East => WIRE_CONNECTION_EAST,
+        BlockDirection::West => WIRE_CONNECTION_WEST,
+        _ => WIRE_CONNECTION_NORTH,
+    }
 }
 
 pub async fn connects_to(
@@ -151,13 +169,7 @@ pub async fn get_default_wire_state(
     );
 
     for dir in BlockDirection::horizontal() {
-        let property_index = match dir {
-            BlockDirection::North => WIRE_CONNECTION_NORTH,
-            BlockDirection::South => WIRE_CONNECTION_SOUTH,
-            BlockDirection::East => WIRE_CONNECTION_EAST,
-            BlockDirection::West => WIRE_CONNECTION_WEST,
-            _ => continue,
-        };
+        let property_index = get_property_index(dir);
 
         if !is_connected(states[property_index].as_str()) {
             let render_connection_type =
@@ -319,5 +331,96 @@ impl PumpkinBlock for RedstoneWireBlock {
     ) -> BlockActionResult {
         println!("Redstone wire used");
         BlockActionResult::Consume
+    }
+
+    async fn update_state_for_neighbor_update(
+        &self,
+        block: &Block,
+        world: &World,
+        server: &Server,
+        state: &State,
+        pos: &BlockPos,
+        direction: &BlockDirection,
+        neighbor_pos: &BlockPos,
+        neighbor_state: &State,
+    ) {
+        if direction == &BlockDirection::Bottom {
+            if !can_run_on_top(neighbor_state) {
+                // Air
+                world
+                    .set_block_state(pos, BLOCKS_BY_ID[&0].states[0].id)
+                    .await;
+                return ();
+            } else {
+                return ();
+            }
+        } else if direction == &BlockDirection::Top {
+            let states = server
+                .block_properties_manager
+                .get_states(block, state)
+                .await;
+            let new_states = get_placement_state(world, *pos, &states, server).await;
+            server
+                .block_properties_manager
+                .set_block_state(block, pos, world, new_states)
+                .await;
+        } else {
+            let mut states = server
+                .block_properties_manager
+                .get_states(block, state)
+                .await;
+            let connection_type = get_render_connection_type(
+                world,
+                *pos,
+                *direction,
+                !is_solid(&get_block_collision_shapes(neighbor_state.id).unwrap()),
+                server,
+            )
+            .await;
+
+            if is_connected(connection_type.value().as_str())
+                == is_connected(states[get_property_index(*direction)].as_str())
+                && !is_fully_connected(&states)
+            {
+                states[get_property_index(*direction)] = connection_type.value();
+                server
+                    .block_properties_manager
+                    .set_block_state(block, pos, world, states)
+                    .await;
+            } else {
+                let states = server
+                    .block_properties_manager
+                    .get_states(block, state)
+                    .await;
+                let mut dot_state = DOT_STATE
+                    .to_vec()
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<String>>();
+                dot_state[get_property_index(*direction)] = connection_type.value();
+                dot_state[WIRE_CONNECTION_POWER_LEVEL] =
+                    states[WIRE_CONNECTION_POWER_LEVEL].clone();
+
+                let placement_state = get_placement_state(world, *pos, &dot_state, server).await;
+
+                server
+                    .block_properties_manager
+                    .set_block_state(block, pos, world, placement_state)
+                    .await;
+            }
+        }
+    }
+
+    async fn neighbor_update(
+        &self,
+        _block: &Block,
+        _world: &World,
+        _server: &Server,
+        _state: &State,
+        _source_block: &Block,
+        _wire_orentation: Option<North>,
+        _notify: bool,
+    ) {
+
     }
 }

@@ -387,4 +387,14 @@ impl BlockPropertiesManager {
             }
         }
     }
+
+    pub async fn get_block_state_by_states(&self, block: &Block, states: Vec<String>) -> u16 {
+        if let Some(properties) = self.properties_registry.get(&block.id) {
+            let mapping = properties.state_mappings.get(&states);
+            if let Some(mapping) = mapping {
+                return block.states[0].id + mapping;
+            }
+        }
+        block.default_state_id
+    }
 }

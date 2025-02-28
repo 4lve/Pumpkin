@@ -11,6 +11,7 @@ use pumpkin_world::block::registry::{Block, State};
 use pumpkin_world::block::{BlockDirection, BlockState};
 use std::sync::Arc;
 
+use super::properties::cardinal::North;
 use super::properties::Direction;
 
 pub trait BlockMetadata {
@@ -125,20 +126,20 @@ pub trait PumpkinBlock: Send + Sync {
 
     fn get_weak_redstone_power(
         &self,
-        _block_state: &BlockState,
+        _block_state: &State,
         _world: &World,
         _pos: &BlockPos,
-        _direction: &Direction,
+        _direction: &BlockDirection,
     ) -> u8 {
         0
     }
 
     fn get_strong_redstone_power(
         &self,
-        _block_state: &BlockState,
+        _block_state: &State,
         _world: &World,
         _pos: &BlockPos,
-        _direction: &Direction,
+        _direction: &BlockDirection,
     ) -> u8 {
         0
     }
@@ -166,5 +167,46 @@ pub trait PumpkinBlock: Send + Sync {
         _server: &Server,
         _world: &World,
     ) {
+    }
+
+    async fn update_state_for_neighbor_update(
+        &self,
+        _block: &Block,
+        _world: &World,
+        _server: &Server,
+        _state: &State,
+        _pos: &BlockPos,
+        _direction: &BlockDirection,
+        _neighbor_pos: &BlockPos,
+        _neighbor_state: &State,
+    ) {
+    }
+
+    async fn neighbor_update(
+        &self,
+        _block: &Block,
+        _world: &World,
+        _server: &Server,
+        _state: &State,
+        _source_block: &Block,
+        _wire_orentation: Option<North>,
+        _notify: bool,
+    ) {
+    }
+
+    async fn update(
+        &self,
+        _block: &Block,
+        _world: &World,
+        _server: &Server,
+        _state: &State,
+        _pos: &BlockPos,
+        _wire_orentation: Option<North>,
+        _block_added: bool,
+    ) {
+    }
+
+    fn is_gate(&self) -> bool {
+        false
     }
 }
