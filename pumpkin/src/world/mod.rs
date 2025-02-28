@@ -323,7 +323,9 @@ impl World {
                 if let Ok(block) = block {
                     let pumpkin_block = server.block_registry.get_pumpkin_block(&block.0);
                     if let Some(pumpkin_block) = pumpkin_block {
-                        pumpkin_block.scheduled_tick(block.0, block.1, server, self, pos).await;
+                        pumpkin_block
+                            .scheduled_tick(block.0, block.1, server, self, pos)
+                            .await;
                     }
                 }
             }

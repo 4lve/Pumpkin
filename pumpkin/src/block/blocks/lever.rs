@@ -79,4 +79,8 @@ impl PumpkinBlock for LeverBlock {
     ) -> BlockActionResult {
         BlockActionResult::Consume
     }
+
+    fn emits_redstone_power(&self, _block_state: &State) -> bool {
+        true
+    }
 }

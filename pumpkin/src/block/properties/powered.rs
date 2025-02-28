@@ -23,8 +23,6 @@ impl BlockProperty for Powered {
         value
     }
 
-    
-
     async fn on_scheduled_tick(&self, value: String, block: &Block) -> String {
         if block.name.contains("button") {
             Self::False().value()

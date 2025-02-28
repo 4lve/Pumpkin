@@ -1,5 +1,5 @@
-use crate::{block::registry::BlockActionResult, world::World};
 use crate::entity::player::Player;
+use crate::{block::registry::BlockActionResult, world::World};
 use async_trait::async_trait;
 use pumpkin_data::item::Item;
 use pumpkin_data::screen::WindowType;

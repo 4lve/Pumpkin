@@ -20,13 +20,13 @@ pub(crate) mod facing;
 pub(crate) mod half;
 pub(crate) mod layers;
 pub(crate) mod open;
+pub(crate) mod power;
 pub(crate) mod powered;
 pub(crate) mod signal_fire;
 pub(crate) mod slab_type;
 pub(crate) mod stair_shape;
 pub(crate) mod unstable;
 pub(crate) mod waterlog;
-pub(crate) mod power;
 
 use crate::{server::Server, world::World};
 
@@ -86,16 +86,16 @@ pub trait BlockProperty: Sync + Send + BlockPropertyMetadata {
 
 #[derive(Default)]
 pub struct BlockPropertiesManager {
-    properties_registry: HashMap<u16, BlockProperties>,
+    pub properties_registry: HashMap<u16, BlockProperties>,
     // Properties that are implemented
-    registered_properties: HashMap<String, Arc<dyn BlockProperty>>,
+    pub registered_properties: HashMap<String, Arc<dyn BlockProperty>>,
 }
 
 pub struct BlockProperties {
     // Mappings from property state strings -> offset
-    state_mappings: HashMap<Vec<String>, u16>,
+    pub state_mappings: HashMap<Vec<String>, u16>,
     // Mappings from offset -> property state strings
-    property_mappings: HashMap<u16, Vec<String>>,
+    pub property_mappings: HashMap<u16, Vec<String>>,
 }
 
 impl BlockPropertiesManager {
@@ -370,5 +370,21 @@ impl BlockPropertiesManager {
             }
         }
         world.set_block_state(&location, block_state_id).await;
+    }
+
+    pub async fn set_block_state(
+        &self,
+        block: &Block,
+        location: &BlockPos,
+        world: &World,
+        new_states: Vec<String>,
+    ) {
+        if let Some(properties) = self.properties_registry.get(&block.id) {
+            let mapping = properties.state_mappings.get(&new_states);
+            if let Some(mapping) = mapping {
+                let block_state_id = block.states[0].id + mapping;
+                world.set_block_state(&location, block_state_id).await;
+            }
+        }
     }
 }

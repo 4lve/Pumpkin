@@ -7,7 +7,10 @@ use pumpkin_data::item::Item;
 use pumpkin_macros::pumpkin_block;
 use pumpkin_protocol::server::play::SUseItemOn;
 use pumpkin_util::math::position::BlockPos;
-use pumpkin_world::block::{registry::{get_block_collision_shapes, is_side_solid, Block, State}, BlockDirection};
+use pumpkin_world::block::{
+    BlockDirection,
+    registry::{Block, State, get_block_collision_shapes, is_side_solid},
+};
 
 use crate::{
     block::{properties::Direction, pumpkin_block::PumpkinBlock, registry::BlockActionResult},

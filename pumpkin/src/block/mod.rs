@@ -1,8 +1,24 @@
 use blocks::{
-    button::ButtonBlock, chest::ChestBlock, furnace::FurnaceBlock, lever::LeverBlock, redstone_wire::RedstoneWireBlock, tnt::TNTBlock
+    button::ButtonBlock, chest::ChestBlock, furnace::FurnaceBlock, lever::LeverBlock, redstone_block::RedstoneBlock, redstone_wire::RedstoneWireBlock, tnt::TNTBlock
 };
 use properties::{
-    age::Age, attachment::Attachment, axis::Axis, cardinal::{Down, East, North, South, Up, West}, face::Face, facing::Facing, half::Half, layers::Layers, open::Open, power::Power, powered::Powered, signal_fire::SignalFire, slab_type::SlabType, stair_shape::StairShape, unstable::Unstable, waterlog::Waterlogged, BlockPropertiesManager
+    BlockPropertiesManager,
+    age::Age,
+    attachment::Attachment,
+    axis::Axis,
+    cardinal::{Down, East, North, South, Up, West},
+    face::Face,
+    facing::Facing,
+    half::Half,
+    layers::Layers,
+    open::Open,
+    power::Power,
+    powered::Powered,
+    signal_fire::SignalFire,
+    slab_type::SlabType,
+    stair_shape::StairShape,
+    unstable::Unstable,
+    waterlog::Waterlogged,
 };
 use pumpkin_data::entity::EntityType;
 use pumpkin_data::item::Item;
@@ -37,6 +53,7 @@ pub fn default_registry() -> Arc<BlockRegistry> {
     manager.register(LeverBlock);
     manager.register(ButtonBlock);
     manager.register(RedstoneWireBlock);
+    manager.register(RedstoneBlock);
 
     Arc::new(manager)
 }

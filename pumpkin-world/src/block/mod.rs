@@ -73,4 +73,12 @@ impl BlockDirection {
             BlockDirection::East => BlockDirection::West,
         }
     }
+    pub fn horizontal() -> Vec<BlockDirection> {
+        vec![
+            BlockDirection::North,
+            BlockDirection::East,
+            BlockDirection::South,
+            BlockDirection::West,
+        ]
+    }
 }

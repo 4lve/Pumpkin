@@ -1,7 +1,7 @@
-use crate::{block::pumpkin_block::PumpkinBlock, world::World};
 use crate::block::registry::BlockActionResult;
 use crate::entity::player::Player;
 use crate::server::Server;
+use crate::{block::pumpkin_block::PumpkinBlock, world::World};
 use async_trait::async_trait;
 use pumpkin_data::item::Item;
 use pumpkin_data::screen::WindowType;
