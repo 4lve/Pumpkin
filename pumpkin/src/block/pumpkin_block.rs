@@ -98,6 +98,7 @@ pub trait PumpkinBlock: Send + Sync {
         _player: &Player,
         _location: BlockPos,
         _server: &Server,
+        _world: &World
     ) {
     }
 
@@ -124,22 +125,24 @@ pub trait PumpkinBlock: Send + Sync {
         false
     }
 
-    fn get_weak_redstone_power(
+    async fn get_weak_redstone_power(
         &self,
         _block_state: &State,
         _world: &World,
         _pos: &BlockPos,
         _direction: &BlockDirection,
+        _server: &Server,
     ) -> u8 {
         0
     }
 
-    fn get_strong_redstone_power(
+    async fn get_strong_redstone_power(
         &self,
         _block_state: &State,
         _world: &World,
         _pos: &BlockPos,
         _direction: &BlockDirection,
+        _server: &Server,
     ) -> u8 {
         0
     }
@@ -154,7 +157,7 @@ pub trait PumpkinBlock: Send + Sync {
     ) {
         let new_state = server
             .block_properties_manager
-            .on_scheduled_tick(block, block_state, world, server)
+            .on_scheduled_tick(block, block_state, world, server, location)
             .await;
 
         world.set_block_state(&location, new_state).await;
@@ -164,6 +167,7 @@ pub trait PumpkinBlock: Send + Sync {
         &self,
         _block: &Block,
         _states: &Vec<String>,
+        _pos: &BlockPos,
         _server: &Server,
         _world: &World,
     ) {
@@ -186,6 +190,7 @@ pub trait PumpkinBlock: Send + Sync {
         &self,
         _block: &Block,
         _world: &World,
+        _pos: &BlockPos,
         _server: &Server,
         _state: &State,
         _source_block: &Block,

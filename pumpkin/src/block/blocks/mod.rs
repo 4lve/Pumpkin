@@ -12,6 +12,7 @@ pub(crate) mod furnace;
 pub(crate) mod jukebox;
 pub(crate) mod lever;
 pub(crate) mod redstone_block;
+pub(crate) mod redstone_lamp;
 pub(crate) mod redstone_wire;
 pub(crate) mod tnt;
 

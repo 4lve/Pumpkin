@@ -841,7 +841,7 @@ impl Player {
                         if let Ok(block) = block {
                             server
                                 .block_registry
-                                .broken(block, &self, location, server)
+                                .broken(block, &self, location, server, &world)
                                 .await;
                         }
                         return;
@@ -860,7 +860,7 @@ impl Player {
                                     .await;
                                 server
                                     .block_registry
-                                    .broken(block, &self, location, server)
+                                    .broken(block, &self, location, server, &world)
                                     .await;
                             } else {
                                 self.mining
@@ -922,7 +922,7 @@ impl Player {
                         }
                         server
                             .block_registry
-                            .broken(block, &self, location, server)
+                            .broken(block, &self, location, server, &world)
                             .await;
                     }
                     self.update_sequence(player_action.sequence.0);
@@ -1037,6 +1037,7 @@ impl Player {
                 .on_interact(
                     block,
                     block_state,
+                    &location,
                     &ItemStack::new(0, Item::AIR),
                     world,
                     server,
@@ -1059,7 +1060,7 @@ impl Player {
             let block_state = world.get_block_state(&location).await?;
             let new_state = server
                 .block_properties_manager
-                .on_interact(block, block_state, &stack, world, server, false)
+                .on_interact(block, block_state, &location, &stack, world, server, false)
                 .await;
             world.set_block_state(&location, new_state).await;
             match action_result {
@@ -1413,10 +1414,15 @@ impl Player {
             let _replaced_id = world.set_block_state(&final_block_pos, new_state).await;
             server
                 .block_registry
-                .on_placed(&block, self, final_block_pos, server)
+                .on_placed(&block, self, final_block_pos, server, world)
+                .await;
+
+            world
+                .update_neighbors(&final_block_pos, server, None)
                 .await;
 
             self.send_sign_packet(block, final_block_pos, face).await;
+
             // Block was placed successfully, decrement inventory
             return Ok(true);
         }

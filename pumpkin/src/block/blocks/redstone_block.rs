@@ -6,8 +6,7 @@ use pumpkin_world::block::{
 };
 
 use crate::{
-    block::{properties::Direction, pumpkin_block::PumpkinBlock},
-    world::World,
+    block::{properties::Direction, pumpkin_block::PumpkinBlock}, server::Server, world::World
 };
 
 #[pumpkin_block("minecraft:redstone_block")]
@@ -19,12 +18,13 @@ impl PumpkinBlock for RedstoneBlock {
         true
     }
 
-    fn get_weak_redstone_power(
+    async fn get_weak_redstone_power(
         &self,
         _block_state: &State,
         _world: &World,
         _pos: &BlockPos,
         _direction: &BlockDirection,
+        _server: &Server,
     ) -> u8 {
         15
     }

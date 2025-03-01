@@ -7,7 +7,7 @@ use pumpkin_inventory::OpenContainer;
 use pumpkin_protocol::server::play::SUseItemOn;
 use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::block::BlockDirection;
-use pumpkin_world::block::registry::Block;
+use pumpkin_world::block::registry::{get_block_by_state_id, Block};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -126,10 +126,11 @@ impl BlockRegistry {
         player: &Player,
         location: BlockPos,
         server: &Server,
+        world: &World,
     ) {
         let pumpkin_block = self.get_pumpkin_block(block);
         if let Some(pumpkin_block) = pumpkin_block {
-            pumpkin_block.placed(block, player, location, server).await;
+            pumpkin_block.placed(block, player, location, server, world).await;
         }
     }
 
@@ -139,11 +140,14 @@ impl BlockRegistry {
         player: &Player,
         location: BlockPos,
         server: &Server,
+        world: &World,
     ) {
         let pumpkin_block = self.get_pumpkin_block(block);
         if let Some(pumpkin_block) = pumpkin_block {
             pumpkin_block.broken(block, player, location, server).await;
         }
+        world.update_neighbors(&location, server, None).await;
+        let block = get_block_by_state_id(block.id).unwrap();
     }
 
     pub async fn close(

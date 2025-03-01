@@ -8,7 +8,8 @@ pub mod explosion;
 pub mod time;
 
 use crate::{
-    PLUGIN_MANAGER, block,
+    PLUGIN_MANAGER,
+    block::{self, pumpkin_block::PumpkinBlock},
     command::client_suggestions,
     entity::{Entity, EntityBase, EntityId, player::Player},
     error::PumpkinError,
@@ -48,13 +49,19 @@ use pumpkin_registry::DimensionType;
 use pumpkin_util::math::vector2::Vector2;
 use pumpkin_util::math::{position::BlockPos, vector3::Vector3};
 use pumpkin_util::text::{TextComponent, color::NamedColor};
-use pumpkin_world::level::Level;
-use pumpkin_world::{block::BlockDirection, chunk::ChunkData};
 use pumpkin_world::{
     block::registry::{
         get_block_and_state_by_state_id, get_block_by_state_id, get_state_by_state_id,
     },
     coordinates::ChunkRelativeBlockCoordinates,
+};
+use pumpkin_world::{
+    block::registry::{get_block_collision_shapes, is_solid},
+    level::Level,
+};
+use pumpkin_world::{
+    block::{BlockDirection, registry::Block},
+    chunk::ChunkData,
 };
 use rand::{Rng, thread_rng};
 use scoreboard::Scoreboard;
@@ -1200,7 +1207,7 @@ impl World {
         scheduled_block_ticks.push((delay, pos.clone()));
     }
 
-    pub async fn get_emitted_redstone_power(
+    pub async fn get_emitted_redstone_power_gate(
         &self,
         pos: &BlockPos,
         direction: &BlockDirection,
@@ -1214,7 +1221,9 @@ impl World {
                 if !pumpkin_block.is_gate() {
                     return 0;
                 } else {
-                    return pumpkin_block.get_strong_redstone_power(state, self, pos, direction);
+                    return pumpkin_block
+                        .get_strong_redstone_power(state, self, pos, direction, server)
+                        .await;
                 }
             }
         } else if block.name == "redstone_block" {
@@ -1229,11 +1238,116 @@ impl World {
         } else {
             if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block) {
                 if !pumpkin_block.emits_redstone_power(state) {
-                    return pumpkin_block.get_strong_redstone_power(state, self, pos, direction);
+                    return pumpkin_block
+                        .get_strong_redstone_power(state, self, pos, direction, server)
+                        .await;
                 }
             }
         }
 
         0
+    }
+
+    pub async fn is_emitting_redstone_power(
+        &self,
+        pos: &BlockPos,
+        direction: &BlockDirection,
+        server: &Server,
+    ) -> bool {
+        self.get_emitted_redstone_power(pos, direction, server)
+            .await
+            > 0
+    }
+
+    pub async fn get_emitted_redstone_power(
+        &self,
+        pos: &BlockPos,
+        direction: &BlockDirection,
+        server: &Server,
+    ) -> u8 {
+        let (block, state) = self.get_block_and_block_state(pos).await.unwrap();
+        if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block) {
+            let i = pumpkin_block
+                .get_weak_redstone_power(state, self, pos, direction, server)
+                .await;
+            return if is_solid(&get_block_collision_shapes(state.id).unwrap_or_default()) {
+                std::cmp::max(
+                    i,
+                    self.get_received_strong_redstone_power(pos, server).await,
+                )
+            } else {
+                i
+            };
+        }
+
+        0
+    }
+
+    pub async fn get_received_strong_redstone_power(&self, pos: &BlockPos, server: &Server) -> u8 {
+        let mut max_power = 0;
+        for direction in BlockDirection::all() {
+            let pos = pos.offset(direction.to_offset());
+            let (block, state) = self.get_block_and_block_state(&pos).await.unwrap();
+            if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block) {
+                max_power = std::cmp::max(
+                    max_power,
+                    pumpkin_block
+                        .get_strong_redstone_power(state, self, &pos, &direction, server)
+                        .await,
+                );
+            }
+        }
+
+        0
+    }
+
+    pub async fn is_receiving_redstone_power(&self, pos: &BlockPos, server: &Server) -> bool {
+        for direction in BlockDirection::all() {
+            if self
+                .get_emitted_redstone_power(&pos.offset(direction.to_offset()), &direction, server)
+                .await
+                > 0
+            {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    pub async fn get_received_redstone_power(&self, pos: &BlockPos, server: &Server) -> u8 {
+        let mut max_power = 0;
+        for direction in BlockDirection::all() {
+            let pos = pos.offset(direction.to_offset());
+            max_power = std::cmp::max(
+                max_power,
+                self.get_emitted_redstone_power(&pos, &direction, server)
+                    .await,
+            );
+        }
+
+        max_power
+    }
+
+    pub async fn update_neighbors(
+        &self,
+        pos: &BlockPos,
+        server: &Server,
+        except: Option<&BlockDirection>,
+    ) {
+        //println!("Neighbor update!");
+        for direction in BlockDirection::update_order() {
+            if except.is_some() && &direction == except.unwrap() {
+                continue;
+            }
+
+            let pos = pos.offset(direction.to_offset());
+            let (block, state) = self.get_block_and_block_state(&pos).await.unwrap();
+            if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block) {
+                pumpkin_block
+                    .neighbor_update(block, self, &pos, server, state, block, None, false)
+                    .await;
+            }
+        }
     }
 }

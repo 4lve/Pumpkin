@@ -127,8 +127,9 @@ impl PumpkinBlock for ButtonBlock {
         &self,
         _block: &Block,
         states: &Vec<String>,
-        _server: &Server,
-        _world: &World,
+        location: &BlockPos,
+        server: &Server,
+        world: &World,
     ) {
         println!("Button state replaced: {:?}", states);
     }

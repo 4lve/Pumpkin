@@ -81,4 +81,33 @@ impl BlockDirection {
             BlockDirection::West,
         ]
     }
+
+    pub fn vertical() -> Vec<BlockDirection> {
+        vec![
+            BlockDirection::Bottom,
+            BlockDirection::Top,
+        ]
+    }
+
+    pub fn all() -> Vec<BlockDirection> {
+        vec![
+            BlockDirection::Bottom,
+            BlockDirection::Top,
+            BlockDirection::North,
+            BlockDirection::South,
+            BlockDirection::West,
+            BlockDirection::East,
+        ]
+    }
+
+    pub fn update_order() -> Vec<BlockDirection> {
+        vec![
+            BlockDirection::West,
+            BlockDirection::East,
+            BlockDirection::Bottom,
+            BlockDirection::Top,
+            BlockDirection::North,
+            BlockDirection::South,
+        ]
+    }
 }

@@ -27,6 +27,7 @@ pub(crate) mod slab_type;
 pub(crate) mod stair_shape;
 pub(crate) mod unstable;
 pub(crate) mod waterlog;
+pub(crate) mod lit;
 
 use crate::{server::Server, world::World};
 
@@ -219,7 +220,7 @@ impl BlockPropertiesManager {
 
             if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block) {
                 pumpkin_block
-                    .on_state_replaced(block, &hmap_key, server, world)
+                    .on_state_replaced(block, &hmap_key, block_pos, server, world)
                     .await;
             }
 
@@ -237,6 +238,7 @@ impl BlockPropertiesManager {
         &self,
         block: &Block,
         block_state: &State,
+        block_pos: &BlockPos,
         item: &ItemStack,
         world: &World,
         server: &Server,
@@ -270,7 +272,7 @@ impl BlockPropertiesManager {
                         if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block)
                         {
                             pumpkin_block
-                                .on_state_replaced(block, &hmap_key, server, world)
+                                .on_state_replaced(block, &hmap_key, block_pos, server, world)
                                 .await;
                         }
                     }
@@ -288,6 +290,7 @@ impl BlockPropertiesManager {
         block_state: &State,
         world: &World,
         server: &Server,
+        block_pos: &BlockPos,
     ) -> u16 {
         if block_state.id == 0 {
             return block_state.id;
@@ -318,7 +321,7 @@ impl BlockPropertiesManager {
                         if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block)
                         {
                             pumpkin_block
-                                .on_state_replaced(block, &hmap_key, server, world)
+                                .on_state_replaced(block, &hmap_key, block_pos, server, world)
                                 .await;
                         }
                     }
@@ -362,7 +365,7 @@ impl BlockPropertiesManager {
                 if block.states[0].id + mapping != block_state_id {
                     if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block) {
                         pumpkin_block
-                            .on_state_replaced(block, &new_states, server, world)
+                            .on_state_replaced(block, &new_states, location, server, world)
                             .await;
                     }
                 }
@@ -377,11 +380,17 @@ impl BlockPropertiesManager {
         block: &Block,
         location: &BlockPos,
         world: &World,
+        server: &Server,
         new_states: Vec<String>,
     ) {
         if let Some(properties) = self.properties_registry.get(&block.id) {
             let mapping = properties.state_mappings.get(&new_states);
             if let Some(mapping) = mapping {
+                if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(block) {
+                    pumpkin_block
+                        .on_state_replaced(block, &new_states, location, server, world)
+                        .await;
+                }
                 let block_state_id = block.states[0].id + mapping;
                 world.set_block_state(&location, block_state_id).await;
             }

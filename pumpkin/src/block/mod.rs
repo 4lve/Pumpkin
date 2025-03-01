@@ -1,24 +1,8 @@
 use blocks::{
-    button::ButtonBlock, chest::ChestBlock, furnace::FurnaceBlock, lever::LeverBlock, redstone_block::RedstoneBlock, redstone_wire::RedstoneWireBlock, tnt::TNTBlock
+    button::ButtonBlock, chest::ChestBlock, furnace::FurnaceBlock, lever::LeverBlock, redstone_block::RedstoneBlock, redstone_lamp::RedstoneLamp, redstone_wire::RedstoneWireBlock, tnt::TNTBlock
 };
 use properties::{
-    BlockPropertiesManager,
-    age::Age,
-    attachment::Attachment,
-    axis::Axis,
-    cardinal::{Down, East, North, South, Up, West},
-    face::Face,
-    facing::Facing,
-    half::Half,
-    layers::Layers,
-    open::Open,
-    power::Power,
-    powered::Powered,
-    signal_fire::SignalFire,
-    slab_type::SlabType,
-    stair_shape::StairShape,
-    unstable::Unstable,
-    waterlog::Waterlogged,
+    age::Age, attachment::Attachment, axis::Axis, cardinal::{Down, East, North, South, Up, West}, face::Face, facing::Facing, half::Half, layers::Layers, lit::Lit, open::Open, power::Power, powered::Powered, signal_fire::SignalFire, slab_type::SlabType, stair_shape::StairShape, unstable::Unstable, waterlog::Waterlogged, BlockPropertiesManager
 };
 use pumpkin_data::entity::EntityType;
 use pumpkin_data::item::Item;
@@ -27,6 +11,7 @@ use pumpkin_util::math::vector3::Vector3;
 use pumpkin_world::block::registry::{Block, State};
 use pumpkin_world::item::ItemStack;
 use rand::Rng;
+use redstone_controller::DefaultRedstoneController;
 
 use crate::block::blocks::jukebox::JukeboxBlock;
 use crate::block::registry::BlockRegistry;
@@ -34,11 +19,12 @@ use crate::entity::item::ItemEntity;
 use crate::server::Server;
 use crate::world::World;
 use crate::{block::blocks::crafting_table::CraftingTableBlock, entity::player::Player};
-use std::sync::Arc;
+use std::sync::{Arc, atomic::AtomicBool};
 
 mod blocks;
 pub mod properties;
 pub mod pumpkin_block;
+pub mod redstone_controller;
 pub mod registry;
 
 #[must_use]
@@ -52,8 +38,12 @@ pub fn default_registry() -> Arc<BlockRegistry> {
     manager.register(TNTBlock);
     manager.register(LeverBlock);
     manager.register(ButtonBlock);
-    manager.register(RedstoneWireBlock);
+    manager.register(RedstoneWireBlock {
+        wire_gives_power: AtomicBool::new(true),
+        redstone_controller: DefaultRedstoneController,
+    });
     manager.register(RedstoneBlock);
+    manager.register(RedstoneLamp);
 
     Arc::new(manager)
 }
@@ -118,6 +108,7 @@ pub fn default_block_properties_manager() -> Arc<BlockPropertiesManager> {
     manager.register(Waterlogged::False());
     manager.register(West::False);
     manager.register(Power::Level0);
+    manager.register(Lit::False());
 
     manager.build_properties_registry();
 
