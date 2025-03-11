@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use pumpkin_data::block::Block;
+use pumpkin_data::block::BlockState;
 use pumpkin_data::block::HorizontalFacing;
 use pumpkin_data::block::{BlockProperties, Boolean};
 use pumpkin_data::tag::RegistryKey;
@@ -96,18 +97,18 @@ pub fn register_fence_blocks(manager: &mut BlockRegistry) {
                 fence_state(world, block, block_pos).await
             }
 
-            async fn on_neighbor_update(
+            async fn get_state_for_neighbor_update(
                 &self,
                 _server: &Server,
                 world: &World,
                 block: &Block,
                 block_pos: &BlockPos,
+                _state: &BlockState,
                 _source_face: &BlockDirection,
                 _source_block_pos: &BlockPos,
-            ) {
-                world
-                    .set_block_state(block_pos, fence_state(world, block, block_pos).await)
-                    .await;
+                _neighbor_state: &BlockState,
+            ) -> u16 {
+                fence_state(world, block, block_pos).await
             }
         }
 

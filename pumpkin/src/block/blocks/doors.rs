@@ -98,10 +98,7 @@ pub fn register_door_blocks(manager: &mut BlockRegistry) {
                 &self,
                 _server: &Server,
                 world: &World,
-                _block: &Block,
-                _face: &BlockDirection,
                 block_pos: &BlockPos,
-                _player_direction: &HorizontalFacing,
             ) -> bool {
                 if world
                     .get_block_state(&block_pos.offset(BlockDirection::Up.to_offset()))

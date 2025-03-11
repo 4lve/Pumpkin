@@ -61,15 +61,7 @@ pub trait PumpkinBlock: Send + Sync {
         block.default_state_id
     }
 
-    async fn can_place(
-        &self,
-        _server: &Server,
-        _world: &World,
-        _block: &Block,
-        _face: &BlockDirection,
-        _block_pos: &BlockPos,
-        _player_direction: &HorizontalFacing,
-    ) -> bool {
+    async fn can_place(&self, _server: &Server, _world: &World, _block_pos: &BlockPos) -> bool {
         true
     }
 
@@ -115,6 +107,20 @@ pub trait PumpkinBlock: Send + Sync {
     ) {
     }
 
+    async fn get_state_for_neighbor_update(
+        &self,
+        _server: &Server,
+        _world: &World,
+        _block: &Block,
+        _block_pos: &BlockPos,
+        state: &BlockState,
+        _source_face: &BlockDirection,
+        _source_block_pos: &BlockPos,
+        _neighbor_state: &BlockState,
+    ) -> u16 {
+        state.id
+    }
+
     async fn on_scheduled_tick(
         &self,
         _server: &Server,
@@ -124,7 +130,7 @@ pub trait PumpkinBlock: Send + Sync {
     ) {
     }
 
-    async fn emits_redstone_power(&self, _block: &Block, _state: &BlockState) -> bool {
+    async fn emits_redstone_power(&self, _state: &BlockState) -> bool {
         false
     }
 
@@ -147,6 +153,10 @@ pub trait PumpkinBlock: Send + Sync {
         _state: &BlockState,
         _direction: &BlockDirection,
     ) -> u8 {
+        0
+    }
+
+    async fn get_strong_power(&self, _server: &Server, _world: &World, _block_pos: &BlockPos) -> u8 {
         0
     }
 }

@@ -3,6 +3,7 @@ use blocks::doors::register_door_blocks;
 use blocks::fence_gates::register_fence_gate_blocks;
 use blocks::fences::register_fence_blocks;
 use blocks::logs::register_log_blocks;
+use blocks::redstone_block::RedstoneBlock;
 use blocks::redstone_wire::RedstoneWireBlock;
 use blocks::{chest::ChestBlock, furnace::FurnaceBlock, lever::LeverBlock, tnt::TNTBlock};
 use pumpkin_data::block::{Block, BlockState};
@@ -15,7 +16,6 @@ use pumpkin_util::math::position::BlockPos;
 use pumpkin_util::math::vector3::Vector3;
 use pumpkin_world::item::ItemStack;
 use rand::Rng;
-use redstone_controller::DefaultRedstoneController;
 
 use crate::block::registry::BlockRegistry;
 use crate::entity::item::ItemEntity;
@@ -23,12 +23,13 @@ use crate::world::World;
 use crate::{block::blocks::crafting_table::CraftingTableBlock, entity::player::Player};
 use crate::{block::blocks::jukebox::JukeboxBlock, entity::experience_orb::ExperienceOrbEntity};
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 mod blocks;
 pub mod pumpkin_block;
-pub mod registry;
 pub mod redstone_controller;
 pub mod redstone_view;
+pub mod registry;
 
 #[must_use]
 pub fn default_registry() -> Arc<BlockRegistry> {
@@ -41,10 +42,9 @@ pub fn default_registry() -> Arc<BlockRegistry> {
     manager.register(TNTBlock);
     manager.register(LeverBlock);
     manager.register(RedstoneWireBlock {
-        wire_gives_power: true,
-        redstone_controller: Arc::new(DefaultRedstoneController),
+        wire_gives_power: AtomicBool::new(true),
     });
-
+    manager.register(RedstoneBlock);
 
     register_door_blocks(&mut manager);
     register_fence_blocks(&mut manager);

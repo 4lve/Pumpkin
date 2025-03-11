@@ -104,15 +104,13 @@ impl BlockRegistry {
         server: &Server,
         world: &World,
         block: &Block,
-        face: &BlockDirection,
+        _face: &BlockDirection,
         block_pos: &BlockPos,
-        player_direction: &HorizontalFacing,
+        _player_direction: &HorizontalFacing,
     ) -> bool {
         let pumpkin_block = self.get_pumpkin_block(block);
         if let Some(pumpkin_block) = pumpkin_block {
-            return pumpkin_block
-                .can_place(server, world, block, face, block_pos, player_direction)
-                .await;
+            return pumpkin_block.can_place(server, world, block_pos).await;
         }
         true
     }
@@ -131,7 +129,7 @@ impl BlockRegistry {
                 .placed(block, player, location, server, world)
                 .await;
         }
-        world.update_neighbors(server, &location, None).await;
+        world.update_neighbors_states(server, &location).await;
     }
 
     pub async fn broken(
@@ -149,7 +147,7 @@ impl BlockRegistry {
                 .broken(block, player, location, server, world.clone(), state)
                 .await;
         }
-        world.update_neighbors(server, &location, None).await;
+        world.update_neighbors_states(server, &location).await;
     }
 
     pub async fn close(

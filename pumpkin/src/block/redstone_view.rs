@@ -57,7 +57,7 @@ pub async fn get_emitted_redstone_power_with_gate(
         return wire_props.power.to_index() as u8;
     } else {
         if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(&block) {
-            if pumpkin_block.emits_redstone_power(&block, &state).await {
+            if pumpkin_block.emits_redstone_power(&state).await {
                 return get_strong_redstone_power(server, world, block_pos, direction).await;
             }
         }
@@ -100,7 +100,6 @@ pub async fn get_emitted_redstone_power(
     }
 }
 
-
 pub async fn is_receiving_redstone_power(
     server: &Server,
     world: &World,
@@ -115,7 +114,6 @@ pub async fn is_receiving_redstone_power(
     false
 }
 
-
 pub async fn get_received_redstone_power(
     server: &Server,
     world: &World,
@@ -124,7 +122,10 @@ pub async fn get_received_redstone_power(
     let mut power = 0;
 
     for direction in BlockDirection::all() {
-        power = std::cmp::max(power, get_emitted_redstone_power(server, world, block_pos, &direction).await);
+        power = std::cmp::max(
+            power,
+            get_emitted_redstone_power(server, world, &block_pos.offset(direction.to_offset()), &direction).await,
+        );
         if power >= 15 {
             break;
         }

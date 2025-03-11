@@ -6,13 +6,16 @@ use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use syn::{Ident, LitBool, LitInt, LitStr};
 
-
 fn is_state_solid(state: &BlockState, all_shapes: &Vec<CollisionShape>) -> bool {
     // Needs min xyz to be 0,0,0 and max xyz to be 1,1,1
     state.collision_shapes.iter().any(|shape| {
         let shape = all_shapes.get(*shape as usize).unwrap();
-        shape.min[0] == 0.0 && shape.min[1] == 0.0 && shape.min[2] == 0.0 &&
-        shape.max[0] == 1.0 && shape.max[1] == 1.0 && shape.max[2] == 1.0
+        shape.min[0] == 0.0
+            && shape.min[1] == 0.0
+            && shape.min[2] == 0.0
+            && shape.max[0] == 1.0
+            && shape.max[1] == 1.0
+            && shape.max[2] == 1.0
     })
 }
 
@@ -1016,7 +1019,9 @@ pub(crate) fn build() -> TokenStream {
         .iter()
         .map(|shape| shape.to_token_stream());
 
-    let unique_states = unique_states.iter().map(|state| state.to_tokens(&blocks_assets.shapes));
+    let unique_states = unique_states
+        .iter()
+        .map(|state| state.to_tokens(&blocks_assets.shapes));
 
     let block_props = block_properties.iter().map(|prop| prop.to_token_stream());
     let properties = property_enums.values().map(|prop| prop.to_token_stream());
