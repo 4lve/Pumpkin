@@ -83,9 +83,9 @@ impl BlockDirection {
     pub fn horizontal() -> [BlockDirection; 4] {
         [
             BlockDirection::North,
+            BlockDirection::East,
             BlockDirection::South,
             BlockDirection::West,
-            BlockDirection::East,
         ]
     }
 

@@ -123,4 +123,30 @@ pub trait PumpkinBlock: Send + Sync {
         _block_pos: &BlockPos,
     ) {
     }
+
+    async fn emits_redstone_power(&self, _block: &Block, _state: &BlockState) -> bool {
+        false
+    }
+
+    async fn get_weak_redstone_power(
+        &self,
+        _block: &Block,
+        _world: &World,
+        _block_pos: &BlockPos,
+        _state: &BlockState,
+        _direction: &BlockDirection,
+    ) -> u8 {
+        0
+    }
+
+    async fn get_strong_redstone_power(
+        &self,
+        _block: &Block,
+        _world: &World,
+        _block_pos: &BlockPos,
+        _state: &BlockState,
+        _direction: &BlockDirection,
+    ) -> u8 {
+        0
+    }
 }

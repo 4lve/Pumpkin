@@ -21,6 +21,12 @@ use crate::world::World;
 async fn click_button(world: &World, block_pos: &BlockPos) {
     let (block, state) = world.get_block_and_block_state(block_pos).await.unwrap();
 
+    let delay = if block.name == "stone_button" {
+        20
+    } else {
+        30
+    };
+
     let mut button_props = ButtonLikeProperties::from_state_id(state.id, &block);
     if !button_props.powered.to_bool() {
         button_props.powered = Boolean::True;
@@ -28,7 +34,7 @@ async fn click_button(world: &World, block_pos: &BlockPos) {
             .set_block_state(block_pos, button_props.to_state_id(&block))
             .await;
         world
-            .schedule_block_tick(&block, *block_pos, 200, TickPriority::Normal)
+            .schedule_block_tick(&block, *block_pos, delay, TickPriority::Normal)
             .await;
     }
 }
