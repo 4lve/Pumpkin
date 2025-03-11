@@ -1331,7 +1331,7 @@ impl World {
                             &neighbor_block,
                             &neighbor_pos,
                             &neighbor_block_state,
-                            &direction,
+                            &direction.opposite(),
                             block_pos,
                             &state,
                         )
