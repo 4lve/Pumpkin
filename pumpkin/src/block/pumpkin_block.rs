@@ -136,6 +136,7 @@ pub trait PumpkinBlock: Send + Sync {
 
     async fn get_weak_redstone_power(
         &self,
+        _server: &Server,
         _block: &Block,
         _world: &World,
         _block_pos: &BlockPos,
@@ -147,6 +148,7 @@ pub trait PumpkinBlock: Send + Sync {
 
     async fn get_strong_redstone_power(
         &self,
+        _server: &Server,
         _block: &Block,
         _world: &World,
         _block_pos: &BlockPos,
@@ -156,7 +158,12 @@ pub trait PumpkinBlock: Send + Sync {
         0
     }
 
-    async fn get_strong_power(&self, _server: &Server, _world: &World, _block_pos: &BlockPos) -> u8 {
+    async fn get_strong_power(
+        &self,
+        _server: &Server,
+        _world: &World,
+        _block_pos: &BlockPos,
+    ) -> u8 {
         0
     }
 }

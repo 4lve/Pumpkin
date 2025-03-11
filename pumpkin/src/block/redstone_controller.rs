@@ -33,6 +33,7 @@ async fn calculate_wire_power_at(world: &World, block_pos: &BlockPos) -> u8 {
         let other_block_state = world.get_block_state(&other_pos).await.unwrap();
         let up_pos = block_pos.up();
         let up_block_state = world.get_block_state(&up_pos).await.unwrap();
+        power = std::cmp::max(power, get_wire_power_at(world, &other_pos).await as i8);
 
         if other_block_state.is_solid && !up_block_state.is_solid {
             let other_up_pos = other_pos.up();

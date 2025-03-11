@@ -4,7 +4,7 @@ use pumpkin_macros::pumpkin_block;
 use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::block::BlockDirection;
 
-use crate::{block::pumpkin_block::PumpkinBlock, world::World};
+use crate::{block::pumpkin_block::PumpkinBlock, server::Server, world::World};
 
 #[pumpkin_block("minecraft:redstone_block")]
 pub struct RedstoneBlock;
@@ -13,6 +13,7 @@ pub struct RedstoneBlock;
 impl PumpkinBlock for RedstoneBlock {
     async fn get_weak_redstone_power(
         &self,
+        _server: &Server,
         _block: &Block,
         _world: &World,
         _block_pos: &BlockPos,

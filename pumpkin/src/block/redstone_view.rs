@@ -13,7 +13,7 @@ async fn get_strong_redstone_power(
     let (block, state) = world.get_block_and_block_state(block_pos).await.unwrap();
     if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(&block) {
         return pumpkin_block
-            .get_strong_redstone_power(&block, world, block_pos, &state, direction)
+            .get_strong_redstone_power(server, &block, world, block_pos, &state, direction)
             .await;
     }
     0
@@ -86,7 +86,7 @@ pub async fn get_emitted_redstone_power(
 
     if let Some(pumpkin_block) = server.block_registry.get_pumpkin_block(&block) {
         power = pumpkin_block
-            .get_weak_redstone_power(&block, world, block_pos, &state, direction)
+            .get_weak_redstone_power(server, &block, world, block_pos, &state, direction)
             .await;
     }
 
@@ -124,7 +124,13 @@ pub async fn get_received_redstone_power(
     for direction in BlockDirection::all() {
         power = std::cmp::max(
             power,
-            get_emitted_redstone_power(server, world, &block_pos.offset(direction.to_offset()), &direction).await,
+            get_emitted_redstone_power(
+                server,
+                world,
+                &block_pos.offset(direction.to_offset()),
+                &direction,
+            )
+            .await,
         );
         if power >= 15 {
             break;

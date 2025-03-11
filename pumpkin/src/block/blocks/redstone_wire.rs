@@ -4,7 +4,7 @@ use crate::block::redstone_view::get_received_redstone_power;
 use crate::entity::player::Player;
 use async_trait::async_trait;
 use pumpkin_data::block::{
-    Block, BlockState, EastWireConnection, Integer0To15, NorthWireConnection,
+    Block, BlockState, EastWireConnection, EnumVariants, Integer0To15, NorthWireConnection,
     ObserverLikeProperties, RedstoneWireLikeProperties, RepeaterLikeProperties,
     SouthWireConnection, WestWireConnection,
 };
@@ -179,6 +179,64 @@ impl PumpkinBlock for RedstoneWireBlock {
     async fn can_place(&self, _server: &Server, world: &World, block_pos: &BlockPos) -> bool {
         let floor = world.get_block_state(&block_pos.down()).await.unwrap();
         Self::can_run_on_top(&floor)
+    }
+
+    async fn get_strong_redstone_power(
+        &self,
+        server: &Server,
+        block: &Block,
+        world: &World,
+        block_pos: &BlockPos,
+        state: &BlockState,
+        direction: &BlockDirection,
+    ) -> u8 {
+        if self
+            .wire_gives_power
+            .load(std::sync::atomic::Ordering::Relaxed)
+        {
+            self.get_weak_redstone_power(server, block, world, block_pos, state, direction)
+                .await
+        } else {
+            0
+        }
+    }
+
+    async fn get_weak_redstone_power(
+        &self,
+        server: &Server,
+        _block: &Block,
+        world: &World,
+        block_pos: &BlockPos,
+        state: &BlockState,
+        direction: &BlockDirection,
+    ) -> u8 {
+        let wire_gives_power = self
+            .wire_gives_power
+            .load(std::sync::atomic::Ordering::Relaxed);
+        if wire_gives_power && *direction != BlockDirection::Down {
+            let wire_props =
+                RedstoneWireLikeProperties::from_state_id(state.id, &Block::REDSTONE_WIRE);
+            let power = wire_props.power.to_index() as u8;
+
+            if power == 0 {
+                return 0;
+            }
+
+            let placement_state =
+                Self::get_placement_state(server, world, block_pos, wire_props).await;
+
+            if *direction != BlockDirection::Up
+                && !placement_state
+                    .get_connection_type(direction.opposite())
+                    .is_connected()
+            {
+                return 0;
+            }
+
+            return power;
+        } else {
+            0
+        }
     }
 }
 
