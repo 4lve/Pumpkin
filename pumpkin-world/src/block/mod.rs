@@ -103,14 +103,6 @@ impl BlockDirection {
         }
     }
 
-    pub fn from_cardinal_direction(direction: HorizontalFacing) -> BlockDirection {
-        match direction {
-            HorizontalFacing::North => BlockDirection::North,
-            HorizontalFacing::South => BlockDirection::South,
-            HorizontalFacing::West => BlockDirection::West,
-            HorizontalFacing::East => BlockDirection::East,
-        }
-    }
     pub fn to_axis(&self) -> Axis {
         match self {
             BlockDirection::North | BlockDirection::South => Axis::Z,
@@ -148,6 +140,21 @@ impl BlockDirection {
             BlockDirection::East => Facing::East,
             BlockDirection::Up => Facing::Up,
             BlockDirection::Down => Facing::Down,
+        }
+    }
+}
+
+pub trait HorizontalFacingHelper {
+    fn to_block_direction(&self) -> BlockDirection;
+}
+
+impl HorizontalFacingHelper for HorizontalFacing {
+    fn to_block_direction(&self) -> BlockDirection {
+        match self {
+            HorizontalFacing::North => BlockDirection::North,
+            HorizontalFacing::South => BlockDirection::South,
+            HorizontalFacing::West => BlockDirection::West,
+            HorizontalFacing::East => BlockDirection::East,
         }
     }
 }

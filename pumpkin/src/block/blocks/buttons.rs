@@ -1,24 +1,28 @@
 use async_trait::async_trait;
 use pumpkin_data::block::Block;
 use pumpkin_data::block::BlockFace;
+use pumpkin_data::block::BlockState;
 use pumpkin_data::block::HorizontalFacing;
 use pumpkin_data::block::{BlockProperties, Boolean};
+use pumpkin_data::item::Item;
 use pumpkin_data::tag::RegistryKey;
 use pumpkin_data::tag::get_tag_values;
 use pumpkin_protocol::server::play::SUseItemOn;
 use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::block::BlockDirection;
+use pumpkin_world::block::HorizontalFacingHelper;
 use pumpkin_world::chunk::TickPriority;
 
 type ButtonLikeProperties = pumpkin_data::block::LeverLikeProperties;
 
 use crate::block::pumpkin_block::{BlockMetadata, PumpkinBlock};
+use crate::block::registry::BlockActionResult;
 use crate::block::registry::BlockRegistry;
 use crate::entity::player::Player;
 use crate::server::Server;
 use crate::world::World;
 
-async fn click_button(world: &World, block_pos: &BlockPos) {
+async fn click_button(server: &Server, world: &World, block_pos: &BlockPos) {
     let (block, state) = world.get_block_and_block_state(block_pos).await.unwrap();
 
     let delay = if block.name == "stone_button" { 20 } else { 30 };
@@ -32,6 +36,7 @@ async fn click_button(world: &World, block_pos: &BlockPos) {
         world
             .schedule_block_tick(&block, *block_pos, delay, TickPriority::Normal)
             .await;
+        world.update_neighbors(server, block_pos, None).await;
     }
 }
 
@@ -88,15 +93,28 @@ pub fn register_button_blocks(manager: &mut BlockRegistry) {
                 _block: &Block,
                 _player: &Player,
                 location: BlockPos,
-                _server: &Server,
+                server: &Server,
                 world: &World,
             ) {
-                click_button(world, &location).await;
+                click_button(server, world, &location).await;
+            }
+
+            async fn use_with_item(
+                &self,
+                _block: &Block,
+                _player: &Player,
+                location: BlockPos,
+                _item: &Item,
+                server: &Server,
+                world: &World,
+            ) -> BlockActionResult {
+                click_button(server, world, &location).await;
+                BlockActionResult::Consume
             }
 
             async fn on_scheduled_tick(
                 &self,
-                _server: &Server,
+                server: &Server,
                 world: &World,
                 block: &Block,
                 block_pos: &BlockPos,
@@ -107,6 +125,43 @@ pub fn register_button_blocks(manager: &mut BlockRegistry) {
                 world
                     .set_block_state(block_pos, props.to_state_id(block))
                     .await;
+                world.update_neighbors(server, block_pos, None).await;
+            }
+
+            async fn emits_redstone_power(&self, _state: &BlockState) -> bool {
+                true
+            }
+
+            async fn get_weak_redstone_power(
+                &self,
+                _server: &Server,
+                _block: &Block,
+                _world: &World,
+                _block_pos: &BlockPos,
+                state: &BlockState,
+                _direction: &BlockDirection,
+            ) -> u8 {
+                let lever_props = ButtonLikeProperties::from_state_id(state.id, _block);
+                if lever_props.powered.to_bool() { 15 } else { 0 }
+            }
+
+            async fn get_strong_redstone_power(
+                &self,
+                _server: &Server,
+                _block: &Block,
+                _world: &World,
+                _block_pos: &BlockPos,
+                state: &BlockState,
+                direction: &BlockDirection,
+            ) -> u8 {
+                let lever_props = ButtonLikeProperties::from_state_id(state.id, _block);
+                if lever_props.powered.to_bool()
+                    && *direction == lever_props.facing.to_block_direction()
+                {
+                    15
+                } else {
+                    0
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 use crate::entity::player::Player;
 use async_trait::async_trait;
-use pumpkin_data::block::{Block, BlockFace, LeverLikeProperties};
+use pumpkin_data::block::{Block, BlockFace, BlockState, LeverLikeProperties};
 use pumpkin_data::{
     block::{BlockProperties, HorizontalFacing},
     item::Item,
@@ -8,7 +8,7 @@ use pumpkin_data::{
 use pumpkin_macros::pumpkin_block;
 use pumpkin_protocol::server::play::SUseItemOn;
 use pumpkin_util::math::position::BlockPos;
-use pumpkin_world::block::BlockDirection;
+use pumpkin_world::block::{BlockDirection, HorizontalFacingHelper};
 
 use crate::{
     block::{pumpkin_block::PumpkinBlock, registry::BlockActionResult},
@@ -16,7 +16,7 @@ use crate::{
     world::World,
 };
 
-async fn toggle_lever(world: &World, block_pos: &BlockPos) {
+async fn toggle_lever(server: &Server, world: &World, block_pos: &BlockPos) {
     let (block, state) = world.get_block_and_block_state(block_pos).await.unwrap();
 
     let mut lever_props = LeverLikeProperties::from_state_id(state.id, &block);
@@ -24,6 +24,8 @@ async fn toggle_lever(world: &World, block_pos: &BlockPos) {
     world
         .set_block_state(block_pos, lever_props.to_state_id(&block))
         .await;
+
+    world.update_neighbors(server, block_pos, None).await;
 }
 
 #[pumpkin_block("minecraft:lever")]
@@ -65,10 +67,10 @@ impl PumpkinBlock for LeverBlock {
         _player: &Player,
         location: BlockPos,
         _item: &Item,
-        _server: &Server,
+        server: &Server,
         world: &World,
     ) -> BlockActionResult {
-        toggle_lever(world, &location).await;
+        toggle_lever(server, world, &location).await;
         BlockActionResult::Consume
     }
 
@@ -77,9 +79,43 @@ impl PumpkinBlock for LeverBlock {
         _block: &Block,
         _player: &Player,
         location: BlockPos,
-        _server: &Server,
+        server: &Server,
         world: &World,
     ) {
-        toggle_lever(world, &location).await;
+        toggle_lever(server, world, &location).await;
+    }
+
+    async fn emits_redstone_power(&self, _state: &BlockState) -> bool {
+        true
+    }
+
+    async fn get_weak_redstone_power(
+        &self,
+        _server: &Server,
+        _block: &Block,
+        _world: &World,
+        _block_pos: &BlockPos,
+        state: &BlockState,
+        _direction: &BlockDirection,
+    ) -> u8 {
+        let lever_props = LeverLikeProperties::from_state_id(state.id, _block);
+        if lever_props.powered.to_bool() { 15 } else { 0 }
+    }
+
+    async fn get_strong_redstone_power(
+        &self,
+        _server: &Server,
+        _block: &Block,
+        _world: &World,
+        _block_pos: &BlockPos,
+        state: &BlockState,
+        direction: &BlockDirection,
+    ) -> u8 {
+        let lever_props = LeverLikeProperties::from_state_id(state.id, _block);
+        if lever_props.powered.to_bool() && *direction == lever_props.facing.to_block_direction() {
+            15
+        } else {
+            0
+        }
     }
 }

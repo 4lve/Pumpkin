@@ -130,6 +130,7 @@ impl BlockRegistry {
                 .await;
         }
         world.update_neighbors_states(server, &location).await;
+        world.update_neighbors(server, &location, None).await;
     }
 
     pub async fn broken(
@@ -148,6 +149,7 @@ impl BlockRegistry {
                 .await;
         }
         world.update_neighbors_states(server, &location).await;
+        world.update_neighbors(server, &location, None).await;
     }
 
     pub async fn close(

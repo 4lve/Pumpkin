@@ -9,6 +9,7 @@ use pumpkin_data::tag::get_tag_values;
 use pumpkin_protocol::server::play::SUseItemOn;
 use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::block::BlockDirection;
+use pumpkin_world::block::HorizontalFacingHelper;
 
 type FenceGateProperties = pumpkin_data::block::OakFenceGateLikeProperties;
 type FenceLikeProperties = pumpkin_data::block::OakFenceLikeProperties;
@@ -25,7 +26,7 @@ fn connects_to(from: &Block, to: &Block, to_state_id: u16, direction: BlockDirec
 
     if to.is_tagged_with("c:fence_gates").unwrap() {
         let fence_gate_props = FenceGateProperties::from_state_id(to_state_id, to);
-        if BlockDirection::from_cardinal_direction(fence_gate_props.facing).to_axis()
+        if fence_gate_props.facing.to_block_direction().to_axis()
             == direction.rotate_clockwise().to_axis()
         {
             return true;

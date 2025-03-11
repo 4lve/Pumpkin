@@ -116,6 +116,7 @@ impl PumpkinBlock for RedstoneWireBlock {
         }
     }
 
+    // TODO: This doesn't get updated when the redstone dust is above/below the wire
     async fn get_state_for_neighbor_update(
         &self,
         server: &Server,
@@ -127,7 +128,6 @@ impl PumpkinBlock for RedstoneWireBlock {
         source_block_pos: &BlockPos,
         _neighbor_state: &BlockState,
     ) -> u16 {
-        //TODO: Fix this
         if source_face == &BlockDirection::Down {
             let floor = world.get_block_state(source_block_pos).await.unwrap();
             if !Self::can_run_on_top(&floor) {
