@@ -4,7 +4,7 @@ use pumpkin_data::block::{
 use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::block::BlockDirection;
 
-use crate::world::{World, NOTIFY_LISTENERS};
+use crate::world::{NOTIFY_LISTENERS, World};
 
 async fn get_strong_power_at(world: &World, block_pos: &BlockPos) -> u8 {
     world

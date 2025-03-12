@@ -20,8 +20,8 @@ use crate::block::registry::BlockActionResult;
 use crate::block::registry::BlockRegistry;
 use crate::entity::player::Player;
 use crate::server::Server;
-use crate::world::World;
 use crate::world::NOTIFY_ALL;
+use crate::world::World;
 
 async fn click_button(world: &World, block_pos: &BlockPos) {
     let (block, state) = world.get_block_and_block_state(block_pos).await.unwrap();

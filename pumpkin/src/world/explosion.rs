@@ -4,7 +4,7 @@ use pumpkin_util::math::{position::BlockPos, vector3::Vector3};
 
 use crate::{block::drop_loot, server::Server};
 
-use super::{World, NOTIFY_ALL};
+use super::{NOTIFY_ALL, World};
 
 pub struct Explosion {
     power: f32,

@@ -45,7 +45,11 @@ async fn toggle_door(world: &World, block_pos: &BlockPos) {
         .set_block_state(block_pos, door_props.to_state_id(&block), NOTIFY_LISTENERS)
         .await;
     world
-        .set_block_state(&other_pos, other_door_props.to_state_id(&other_block), NOTIFY_LISTENERS)
+        .set_block_state(
+            &other_pos,
+            other_door_props.to_state_id(&other_block),
+            NOTIFY_LISTENERS,
+        )
         .await;
 }
 
@@ -123,7 +127,7 @@ pub fn register_door_blocks(manager: &mut BlockRegistry) {
                     .set_block_state(
                         &location.offset(BlockDirection::Up.to_offset()),
                         door_props.to_state_id(block),
-                        NOTIFY_ALL
+                        NOTIFY_ALL,
                     )
                     .await;
             }

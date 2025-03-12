@@ -72,7 +72,9 @@ impl CommandExecutor for Executor {
                         for z in start_z..=end_z {
                             let block_position = BlockPos(Vector3 { x, y, z });
                             world.break_block(&block_position, None, false, false).await;
-                            world.set_block_state(&block_position, block_state_id, FORCE_STATE).await;
+                            world
+                                .set_block_state(&block_position, block_state_id, FORCE_STATE)
+                                .await;
                             placed_blocks += 1;
                         }
                     }
@@ -83,7 +85,9 @@ impl CommandExecutor for Executor {
                     for y in start_y..=end_y {
                         for z in start_z..=end_z {
                             let block_position = BlockPos(Vector3 { x, y, z });
-                            world.set_block_state(&block_position, block_state_id, FORCE_STATE).await;
+                            world
+                                .set_block_state(&block_position, block_state_id, FORCE_STATE)
+                                .await;
                             placed_blocks += 1;
                         }
                     }
@@ -96,7 +100,13 @@ impl CommandExecutor for Executor {
                             let block_position = BlockPos(Vector3 { x, y, z });
                             match world.get_block_state(&block_position).await {
                                 Ok(old_state) if old_state.air => {
-                                    world.set_block_state(&block_position, block_state_id, FORCE_STATE).await;
+                                    world
+                                        .set_block_state(
+                                            &block_position,
+                                            block_state_id,
+                                            FORCE_STATE,
+                                        )
+                                        .await;
                                     placed_blocks += 1;
                                 }
                                 _ => {}
@@ -117,7 +127,9 @@ impl CommandExecutor for Executor {
                                 || z == start_z
                                 || z == end_z;
                             if is_edge {
-                                world.set_block_state(&block_position, block_state_id, FORCE_STATE).await;
+                                world
+                                    .set_block_state(&block_position, block_state_id, FORCE_STATE)
+                                    .await;
                             } else {
                                 world.set_block_state(&block_position, 0, FORCE_STATE).await;
                             }
@@ -138,7 +150,9 @@ impl CommandExecutor for Executor {
                                 || z == start_z
                                 || z == end_z;
                             if is_edge {
-                                world.set_block_state(&block_position, block_state_id, FORCE_STATE).await;
+                                world
+                                    .set_block_state(&block_position, block_state_id, FORCE_STATE)
+                                    .await;
                                 placed_blocks += 1;
                             }
                         }

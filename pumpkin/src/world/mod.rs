@@ -105,22 +105,26 @@ impl PumpkinError for GetBlockError {
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BlockFlags {
+    /// Update neighbors
     notify_neighbors: bool,
+    /// Update enteties AI
     notify_listeners: bool,
+    /// Don't trigger state updates
     force_state: bool,
+    /// Don't drop items
     skip_drops: bool,
+    /// Did the block move?
     moved: bool,
+    /// Don't replace redstone wire
     skip_redstone_wire_replacement: bool,
-    notify_all: bool,
 }
 pub const NOTIFY_ALL: BlockFlags = BlockFlags {
-    notify_neighbors: false,
-    notify_listeners: false,
+    notify_neighbors: true,
+    notify_listeners: true,
     force_state: false,
     skip_drops: false,
     moved: false,
     skip_redstone_wire_replacement: false,
-    notify_all: true,
 };
 pub const NOTIFY_NEIGHBORS: BlockFlags = BlockFlags {
     notify_neighbors: true,
@@ -129,7 +133,6 @@ pub const NOTIFY_NEIGHBORS: BlockFlags = BlockFlags {
     skip_drops: false,
     moved: false,
     skip_redstone_wire_replacement: false,
-    notify_all: false,
 };
 pub const NOTIFY_LISTENERS: BlockFlags = BlockFlags {
     notify_neighbors: false,
@@ -138,7 +141,6 @@ pub const NOTIFY_LISTENERS: BlockFlags = BlockFlags {
     skip_drops: false,
     moved: false,
     skip_redstone_wire_replacement: false,
-    notify_all: false,
 };
 pub const FORCE_STATE: BlockFlags = BlockFlags {
     notify_neighbors: false,
@@ -147,7 +149,6 @@ pub const FORCE_STATE: BlockFlags = BlockFlags {
     skip_drops: false,
     moved: false,
     skip_redstone_wire_replacement: false,
-    notify_all: false,
 };
 
 /// Represents a Minecraft world, containing entities, players, and the underlying level data.
@@ -1127,7 +1128,12 @@ impl World {
     }
 
     /// Sets a block
-    pub async fn set_block_state(&self, position: &BlockPos, block_state_id: u16, _flags: BlockFlags) -> u16 {
+    pub async fn set_block_state(
+        &self,
+        position: &BlockPos,
+        block_state_id: u16,
+        _flags: BlockFlags,
+    ) -> u16 {
         let (chunk_coordinate, relative_coordinates) = position.chunk_and_chunk_relative_position();
 
         // Since we divide by 16 remnant can never exceed u8
@@ -1402,7 +1408,8 @@ impl World {
                         )
                         .await;
                     if new_state != neighbor_block_state.id {
-                        self.set_block_state(&neighbor_pos, new_state, NOTIFY_LISTENERS).await;
+                        self.set_block_state(&neighbor_pos, new_state, NOTIFY_LISTENERS)
+                            .await;
                     }
                 }
             }

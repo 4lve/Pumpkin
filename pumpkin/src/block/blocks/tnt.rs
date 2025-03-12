@@ -5,7 +5,7 @@ use crate::block::registry::BlockActionResult;
 use crate::entity::player::Player;
 use crate::entity::tnt::TNTEntity;
 use crate::server::Server;
-use crate::world::{World, NOTIFY_ALL};
+use crate::world::{NOTIFY_ALL, World};
 use async_trait::async_trait;
 use pumpkin_data::block::Block;
 use pumpkin_data::entity::EntityType;
