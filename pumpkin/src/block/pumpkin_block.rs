@@ -75,6 +75,8 @@ pub trait PumpkinBlock: Send + Sync {
     ) {
     }
 
+    async fn prepare(&self, _world: &World, _state: &BlockState, _pos: &BlockPos) {}
+
     async fn broken(
         &self,
         _block: &Block,
@@ -118,7 +120,6 @@ pub trait PumpkinBlock: Send + Sync {
     }
     async fn get_state_for_neighbor_update(
         &self,
-        _server: &Server,
         _world: &World,
         _block: &Block,
         _block_pos: &BlockPos,

@@ -70,23 +70,66 @@ impl PumpkinBlock for RedstoneWireBlock {
         RedstoneWireBlock::update_offset_neighbors(world, &location).await;
     }
 
+    // TODO: Fix this
     async fn on_state_replaced(
         &self,
         world: &World,
-        _block: &Block,
+        block: &Block,
         block_pos: &BlockPos,
         _old_state_id: u16,
         _new_state_id: u16,
         moved: bool,
     ) {
+        /*
         if !moved {
-            for direction in BlockDirection::vertical() {
+            let state = world.get_block_state(block_pos).await.unwrap();
+            for direction in BlockDirection::all() {
                 world
                     .update_neighbors(&block_pos.offset(direction.to_offset()), None)
                     .await;
             }
 
+            crate::block::redstone_controller::update(world, block_pos, block, &state, None, false)
+                .await;
             RedstoneWireBlock::update_offset_neighbors(world, &block_pos).await;
+        }
+        */
+    }
+
+    /// TODO: Fix this
+    async fn prepare(&self, world: &World, state: &BlockState, pos: &BlockPos) {
+        let mut pos = *pos;
+        let wire_props = if state.id == 0 {
+            RedstoneWireLikeProperties::default(&Block::REDSTONE_WIRE)
+        } else {
+            RedstoneWireLikeProperties::from_state_id(state.id, &Block::REDSTONE_WIRE)
+        };
+
+        for direction in BlockDirection::horizontal() {
+            let wire_connection_type = wire_props.get_connection_type(direction);
+            let other_block = world
+                .get_block(&pos.offset(direction.to_offset()))
+                .await
+                .unwrap();
+            if wire_connection_type.is_connected() && other_block != Block::REDSTONE_WIRE {
+                pos = pos.down();
+                let pos_down_block = world.get_block(&pos).await.unwrap();
+                if pos_down_block == Block::REDSTONE_WIRE {
+                    let block_pos = pos.offset(direction.opposite().to_offset());
+                    world
+                        .update_neighbors_state(&block_pos, &direction.opposite())
+                        .await;
+                }
+
+                pos = pos.up();
+                let pos_up_block = world.get_block(&pos).await.unwrap();
+                if pos_up_block == Block::REDSTONE_WIRE {
+                    let block_pos = pos.offset(direction.opposite().to_offset());
+                    world
+                        .update_neighbors_state(&block_pos, &direction.opposite())
+                        .await;
+                }
+            }
         }
     }
 
@@ -135,7 +178,6 @@ impl PumpkinBlock for RedstoneWireBlock {
     // TODO: This doesn't get updated when the redstone dust is above/below the wire
     async fn get_state_for_neighbor_update(
         &self,
-        _server: &Server,
         world: &World,
         _block: &Block,
         block_pos: &BlockPos,

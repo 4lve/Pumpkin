@@ -128,8 +128,10 @@ impl BlockRegistry {
             pumpkin_block
                 .placed(block, player, location, server, world)
                 .await;
+            let state = world.get_block_state(&location).await.unwrap();
+            //pumpkin_block.prepare(world, &state, &location).await;
         }
-        world.update_neighbors_states(server, &location).await;
+        world.update_neighbors_states(&location).await;
         world.update_neighbors(&location, None).await;
     }
 
@@ -142,13 +144,16 @@ impl BlockRegistry {
         server: &Server,
         state: BlockState,
     ) {
+        println!("broken: {:?}", block.name);
         let pumpkin_block = self.get_pumpkin_block(block);
         if let Some(pumpkin_block) = pumpkin_block {
             pumpkin_block
                 .broken(block, player, location, server, world.clone(), state)
                 .await;
+            let state = world.get_block_state(&location).await.unwrap();
+            //pumpkin_block.prepare(&world, &state, &location).await;
         }
-        world.update_neighbors_states(server, &location).await;
+        world.update_neighbors_states(&location).await;
         world.update_neighbors(&location, None).await;
     }
 

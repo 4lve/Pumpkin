@@ -1095,18 +1095,21 @@ impl World {
             .set_block(relative, block_state_id);
 
         if replaced_block_state_id != block_state_id {
-            self.block_registry
-                .get_pumpkin_block(&Block::from_state_id(replaced_block_state_id).unwrap())
-                .unwrap()
-                .on_state_replaced(
-                    self,
-                    &Block::from_state_id(replaced_block_state_id).unwrap(),
-                    position,
-                    replaced_block_state_id,
-                    block_state_id,
-                    false,
-                )
-                .await;
+            if let Some(pumpkin_block) = self
+                .block_registry
+                .get_pumpkin_block(&Block::from_state_id(block_state_id).unwrap())
+            {
+                pumpkin_block
+                    .on_state_replaced(
+                        self,
+                        &Block::from_state_id(block_state_id).unwrap(),
+                        position,
+                        replaced_block_state_id,
+                        block_state_id,
+                        false,
+                    )
+                    .await;
+            }
         }
         self.broadcast_packet_all(&CBlockUpdate::new(
             position,
@@ -1331,18 +1334,17 @@ impl World {
     }
 
     /// Updates neighboring blocks states of a block
-    pub async fn update_neighbors_states(&self, server: &Server, block_pos: &BlockPos) {
+    pub async fn update_neighbors_states(&self, block_pos: &BlockPos) {
         let state = self.get_block_state(block_pos).await.unwrap();
         for direction in BlockDirection::update_order() {
             let neighbor_pos = block_pos.offset(direction.to_offset());
             let res = self.get_block_and_block_state(&neighbor_pos).await;
             if let Ok((neighbor_block, neighbor_block_state)) = res {
                 if let Some(neighbor_pumpkin_block) =
-                    server.block_registry.get_pumpkin_block(&neighbor_block)
+                    self.block_registry.get_pumpkin_block(&neighbor_block)
                 {
                     let new_state = neighbor_pumpkin_block
                         .get_state_for_neighbor_update(
-                            server,
                             self,
                             &neighbor_block,
                             &neighbor_pos,
@@ -1356,6 +1358,29 @@ impl World {
                         self.set_block_state(&neighbor_pos, new_state).await;
                     }
                 }
+            }
+        }
+    }
+
+    pub async fn update_neighbors_state(&self, block_pos: &BlockPos, direction: &BlockDirection) {
+        let state = self.get_block_state(block_pos).await.unwrap();
+        let neighbor_pos = block_pos.offset(direction.to_offset());
+        let res = self.get_block_and_block_state(&neighbor_pos).await;
+        if let Ok((neighbor_block, neighbor_block_state)) = res {
+            if let Some(neighbor_pumpkin_block) =
+                self.block_registry.get_pumpkin_block(&neighbor_block)
+            {
+                neighbor_pumpkin_block
+                    .get_state_for_neighbor_update(
+                        self,
+                        &neighbor_block,
+                        &neighbor_pos,
+                        &neighbor_block_state,
+                        direction,
+                        block_pos,
+                        &state,
+                    )
+                    .await;
             }
         }
     }

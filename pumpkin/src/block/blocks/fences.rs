@@ -100,7 +100,6 @@ pub fn register_fence_blocks(manager: &mut BlockRegistry) {
 
             async fn get_state_for_neighbor_update(
                 &self,
-                _server: &Server,
                 world: &World,
                 block: &Block,
                 block_pos: &BlockPos,
