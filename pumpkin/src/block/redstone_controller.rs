@@ -4,14 +4,14 @@ use pumpkin_data::block::{
 use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::block::BlockDirection;
 
-use crate::{server::Server, world::World};
+use crate::world::World;
 
-async fn get_strong_power_at(server: &Server, world: &World, block_pos: &BlockPos) -> u8 {
-    server
+async fn get_strong_power_at(world: &World, block_pos: &BlockPos) -> u8 {
+    world
         .block_registry
         .get_pumpkin_block(&Block::REDSTONE_WIRE)
         .unwrap()
-        .get_strong_power(server, world, block_pos)
+        .get_strong_power(world, block_pos)
         .await
 }
 
@@ -48,7 +48,6 @@ async fn calculate_wire_power_at(world: &World, block_pos: &BlockPos) -> u8 {
 }
 
 pub async fn update(
-    server: &Server,
     world: &World,
     block_pos: &BlockPos,
     block: &Block,
@@ -56,7 +55,7 @@ pub async fn update(
     _wire_orientation: Option<BlockDirection>,
     _block_added: bool,
 ) {
-    let power = calculate_total_power_at(server, world, block_pos).await;
+    let power = calculate_total_power_at(world, block_pos).await;
     let mut wire_props = RedstoneWireLikeProperties::from_state_id(state.id, &block);
 
     if wire_props.power.to_index() as u8 != power {
@@ -75,13 +74,13 @@ pub async fn update(
         }
 
         for position in positions_to_update {
-            world.update_neighbors(server, &position, None).await;
+            world.update_neighbors(&position, None).await;
         }
     }
 }
 
-async fn calculate_total_power_at(server: &Server, world: &World, block_pos: &BlockPos) -> u8 {
-    let power = get_strong_power_at(server, world, block_pos).await;
+async fn calculate_total_power_at(world: &World, block_pos: &BlockPos) -> u8 {
+    let power = get_strong_power_at(world, block_pos).await;
 
     if power == 15 {
         return power;

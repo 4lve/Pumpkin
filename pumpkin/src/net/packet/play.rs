@@ -960,7 +960,7 @@ impl Player {
 
                         let broken_state = world.get_block_state(&location).await.unwrap();
                         world
-                            .break_block(&location, Some(self.clone()), false, None)
+                            .break_block(&location, Some(self.clone()), false, false)
                             .await;
                         server
                             .block_registry
@@ -985,7 +985,7 @@ impl Player {
                         if speed >= 1.0 {
                             let broken_state = world.get_block_state(&location).await.unwrap();
                             world
-                                .break_block(&location, Some(self.clone()), true, None)
+                                .break_block(&location, Some(self.clone()), true, false)
                                 .await;
                             server
                                 .block_registry
@@ -1053,7 +1053,7 @@ impl Player {
                             let drop = self.gamemode.load() != GameMode::Creative
                                 && self.can_harvest(&state, block.name).await;
                             world
-                                .break_block(&location, Some(self.clone()), drop, None)
+                                .break_block(&location, Some(self.clone()), drop, false)
                                 .await;
                         }
                         server

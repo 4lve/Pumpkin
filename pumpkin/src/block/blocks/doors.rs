@@ -94,12 +94,7 @@ pub fn register_door_blocks(manager: &mut BlockRegistry) {
                 door_props.to_state_id(block)
             }
 
-            async fn can_place(
-                &self,
-                _server: &Server,
-                world: &World,
-                block_pos: &BlockPos,
-            ) -> bool {
+            async fn can_place(&self, world: &World, block_pos: &BlockPos) -> bool {
                 if world
                     .get_block_state(&block_pos.offset(BlockDirection::Up.to_offset()))
                     .await
@@ -135,7 +130,7 @@ pub fn register_door_blocks(manager: &mut BlockRegistry) {
                 block: &Block,
                 _player: &Player,
                 location: BlockPos,
-                server: &Server,
+                _server: &Server,
                 world: Arc<World>,
                 state: BlockState,
             ) {
@@ -150,9 +145,7 @@ pub fn register_door_blocks(manager: &mut BlockRegistry) {
 
                 if let Ok(other_block) = world.get_block(&other_pos).await {
                     if other_block.id == block.id {
-                        world
-                            .break_block(&other_pos, None, true, Some(server))
-                            .await;
+                        world.break_block(&other_pos, None, true, true).await;
                     }
                 }
             }

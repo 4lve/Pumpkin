@@ -16,7 +16,7 @@ use crate::{
     world::World,
 };
 
-async fn toggle_lever(server: &Server, world: &World, block_pos: &BlockPos) {
+async fn toggle_lever(_server: &Server, world: &World, block_pos: &BlockPos) {
     let (block, state) = world.get_block_and_block_state(block_pos).await.unwrap();
 
     let mut lever_props = LeverLikeProperties::from_state_id(state.id, &block);
@@ -25,7 +25,7 @@ async fn toggle_lever(server: &Server, world: &World, block_pos: &BlockPos) {
         .set_block_state(block_pos, lever_props.to_state_id(&block))
         .await;
 
-    world.update_neighbors(server, block_pos, None).await;
+    world.update_neighbors(block_pos, None).await;
 }
 
 #[pumpkin_block("minecraft:lever")]
@@ -91,7 +91,6 @@ impl PumpkinBlock for LeverBlock {
 
     async fn get_weak_redstone_power(
         &self,
-        _server: &Server,
         _block: &Block,
         _world: &World,
         _block_pos: &BlockPos,
@@ -104,7 +103,6 @@ impl PumpkinBlock for LeverBlock {
 
     async fn get_strong_redstone_power(
         &self,
-        _server: &Server,
         _block: &Block,
         _world: &World,
         _block_pos: &BlockPos,

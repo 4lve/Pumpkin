@@ -61,7 +61,7 @@ pub trait PumpkinBlock: Send + Sync {
         block.default_state_id
     }
 
-    async fn can_place(&self, _server: &Server, _world: &World, _block_pos: &BlockPos) -> bool {
+    async fn can_place(&self, _world: &World, _block_pos: &BlockPos) -> bool {
         true
     }
 
@@ -98,7 +98,6 @@ pub trait PumpkinBlock: Send + Sync {
 
     async fn on_neighbor_update(
         &self,
-        _server: &Server,
         _world: &World,
         _block: &Block,
         _block_pos: &BlockPos,
@@ -107,6 +106,16 @@ pub trait PumpkinBlock: Send + Sync {
     ) {
     }
 
+    async fn on_state_replaced(
+        &self,
+        _world: &World,
+        _block: &Block,
+        _block_pos: &BlockPos,
+        _old_state_id: u16,
+        _new_state_id: u16,
+        _moved: bool,
+    ) {
+    }
     async fn get_state_for_neighbor_update(
         &self,
         _server: &Server,
@@ -136,7 +145,6 @@ pub trait PumpkinBlock: Send + Sync {
 
     async fn get_weak_redstone_power(
         &self,
-        _server: &Server,
         _block: &Block,
         _world: &World,
         _block_pos: &BlockPos,
@@ -148,7 +156,6 @@ pub trait PumpkinBlock: Send + Sync {
 
     async fn get_strong_redstone_power(
         &self,
-        _server: &Server,
         _block: &Block,
         _world: &World,
         _block_pos: &BlockPos,
@@ -158,12 +165,7 @@ pub trait PumpkinBlock: Send + Sync {
         0
     }
 
-    async fn get_strong_power(
-        &self,
-        _server: &Server,
-        _world: &World,
-        _block_pos: &BlockPos,
-    ) -> u8 {
+    async fn get_strong_power(&self, _world: &World, _block_pos: &BlockPos) -> u8 {
         0
     }
 }

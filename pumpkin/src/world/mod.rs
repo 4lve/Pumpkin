@@ -8,7 +8,8 @@ pub mod explosion;
 pub mod time;
 
 use crate::{
-    PLUGIN_MANAGER, block,
+    PLUGIN_MANAGER,
+    block::{self, registry::BlockRegistry},
     command::client_suggestions,
     entity::{Entity, EntityBase, EntityId, player::Player},
     error::PumpkinError,
@@ -133,12 +134,18 @@ pub struct World {
     pub dimension_type: DimensionType,
     /// The world's weather, including rain and thunder levels
     pub weather: Mutex<Weather>,
+    /// Block registry reference
+    pub block_registry: Arc<BlockRegistry>,
     // TODO: entities
 }
 
 impl World {
     #[must_use]
-    pub fn load(level: Level, dimension_type: DimensionType) -> Self {
+    pub fn load(
+        level: Level,
+        dimension_type: DimensionType,
+        block_registry: Arc<BlockRegistry>,
+    ) -> Self {
         Self {
             level: Arc::new(level),
             single_chunk_lfu: Mutex::new([Vector2::default(); 16]),
@@ -149,6 +156,7 @@ impl World {
             level_time: Mutex::new(LevelTime::new()),
             dimension_type,
             weather: Mutex::new(Weather::new()),
+            block_registry: block_registry.clone(),
         }
     }
 
@@ -1086,6 +1094,20 @@ impl World {
             .subchunks
             .set_block(relative, block_state_id);
 
+        if replaced_block_state_id != block_state_id {
+            self.block_registry
+                .get_pumpkin_block(&Block::from_state_id(replaced_block_state_id).unwrap())
+                .unwrap()
+                .on_state_replaced(
+                    self,
+                    &Block::from_state_id(replaced_block_state_id).unwrap(),
+                    position,
+                    replaced_block_state_id,
+                    block_state_id,
+                    false,
+                )
+                .await;
+        }
         self.broadcast_packet_all(&CBlockUpdate::new(
             position,
             i32::from(block_state_id).into(),
@@ -1203,7 +1225,7 @@ impl World {
         position: &BlockPos,
         cause: Option<Arc<Player>>,
         drop: bool,
-        server: Option<&Server>,
+        update_neighbors: bool,
     ) {
         let block = self.get_block(position).await.unwrap();
         let event = BlockBreakEvent::new(cause.clone(), block.clone(), 0, false);
@@ -1236,8 +1258,8 @@ impl World {
                 None => self.broadcast_packet_all(&particles_packet).await,
             }
 
-            if let Some(server) = server {
-                self.update_neighbors(server, position, None).await;
+            if update_neighbors {
+                self.update_neighbors(position, None).await;
             }
         }
     }
@@ -1283,12 +1305,7 @@ impl World {
     }
 
     /// Updates neighboring blocks of a block
-    pub async fn update_neighbors(
-        &self,
-        server: &Server,
-        block_pos: &BlockPos,
-        except: Option<&BlockDirection>,
-    ) {
+    pub async fn update_neighbors(&self, block_pos: &BlockPos, except: Option<&BlockDirection>) {
         for direction in BlockDirection::update_order() {
             if Some(&direction) == except {
                 continue;
@@ -1297,11 +1314,10 @@ impl World {
             let neighbor_block = self.get_block(&neighbor_pos).await;
             if let Ok(neighbor_block) = neighbor_block {
                 if let Some(neighbor_pumpkin_block) =
-                    server.block_registry.get_pumpkin_block(&neighbor_block)
+                    self.block_registry.get_pumpkin_block(&neighbor_block)
                 {
                     neighbor_pumpkin_block
                         .on_neighbor_update(
-                            server,
                             self,
                             &neighbor_block,
                             &neighbor_pos,

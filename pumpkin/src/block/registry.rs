@@ -101,7 +101,7 @@ impl BlockRegistry {
 
     pub async fn can_place(
         &self,
-        server: &Server,
+        _server: &Server,
         world: &World,
         block: &Block,
         _face: &BlockDirection,
@@ -110,7 +110,7 @@ impl BlockRegistry {
     ) -> bool {
         let pumpkin_block = self.get_pumpkin_block(block);
         if let Some(pumpkin_block) = pumpkin_block {
-            return pumpkin_block.can_place(server, world, block_pos).await;
+            return pumpkin_block.can_place(world, block_pos).await;
         }
         true
     }
@@ -130,7 +130,7 @@ impl BlockRegistry {
                 .await;
         }
         world.update_neighbors_states(server, &location).await;
-        world.update_neighbors(server, &location, None).await;
+        world.update_neighbors(&location, None).await;
     }
 
     pub async fn broken(
@@ -149,7 +149,7 @@ impl BlockRegistry {
                 .await;
         }
         world.update_neighbors_states(server, &location).await;
-        world.update_neighbors(server, &location, None).await;
+        world.update_neighbors(&location, None).await;
     }
 
     pub async fn close(
