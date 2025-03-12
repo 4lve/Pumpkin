@@ -103,6 +103,53 @@ impl PumpkinError for GetBlockError {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+pub struct BlockFlags {
+    notify_neighbors: bool,
+    notify_listeners: bool,
+    force_state: bool,
+    skip_drops: bool,
+    moved: bool,
+    skip_redstone_wire_replacement: bool,
+    notify_all: bool,
+}
+pub const NOTIFY_ALL: BlockFlags = BlockFlags {
+    notify_neighbors: false,
+    notify_listeners: false,
+    force_state: false,
+    skip_drops: false,
+    moved: false,
+    skip_redstone_wire_replacement: false,
+    notify_all: true,
+};
+pub const NOTIFY_NEIGHBORS: BlockFlags = BlockFlags {
+    notify_neighbors: true,
+    notify_listeners: false,
+    force_state: false,
+    skip_drops: false,
+    moved: false,
+    skip_redstone_wire_replacement: false,
+    notify_all: false,
+};
+pub const NOTIFY_LISTENERS: BlockFlags = BlockFlags {
+    notify_neighbors: false,
+    notify_listeners: true,
+    force_state: false,
+    skip_drops: false,
+    moved: false,
+    skip_redstone_wire_replacement: false,
+    notify_all: false,
+};
+pub const FORCE_STATE: BlockFlags = BlockFlags {
+    notify_neighbors: false,
+    notify_listeners: false,
+    force_state: true,
+    skip_drops: false,
+    moved: false,
+    skip_redstone_wire_replacement: false,
+    notify_all: false,
+};
+
 /// Represents a Minecraft world, containing entities, players, and the underlying level data.
 ///
 /// Each dimension (Overworld, Nether, End) typically has its own `World`.
@@ -1080,7 +1127,7 @@ impl World {
     }
 
     /// Sets a block
-    pub async fn set_block_state(&self, position: &BlockPos, block_state_id: u16) -> u16 {
+    pub async fn set_block_state(&self, position: &BlockPos, block_state_id: u16, _flags: BlockFlags) -> u16 {
         let (chunk_coordinate, relative_coordinates) = position.chunk_and_chunk_relative_position();
 
         // Since we divide by 16 remnant can never exceed u8
@@ -1240,7 +1287,7 @@ impl World {
             .await;
 
         if !event.cancelled {
-            let broken_block_state_id = self.set_block_state(position, 0).await;
+            let broken_block_state_id = self.set_block_state(position, 0, NOTIFY_ALL).await;
 
             let particles_packet = CWorldEvent::new(
                 WorldEvent::BlockBroken as i32,
@@ -1355,7 +1402,7 @@ impl World {
                         )
                         .await;
                     if new_state != neighbor_block_state.id {
-                        self.set_block_state(&neighbor_pos, new_state).await;
+                        self.set_block_state(&neighbor_pos, new_state, NOTIFY_LISTENERS).await;
                     }
                 }
             }

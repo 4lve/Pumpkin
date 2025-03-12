@@ -7,6 +7,7 @@ use crate::command::args::{ConsumedArgs, FindArg};
 use crate::command::tree::CommandTree;
 use crate::command::tree::builder::{argument, literal};
 use crate::command::{CommandError, CommandExecutor, CommandSender};
+use crate::world::FORCE_STATE;
 
 const NAMES: [&str; 1] = ["setblock"];
 
@@ -50,16 +51,16 @@ impl CommandExecutor for Executor {
         let success = match mode {
             Mode::Destroy => {
                 world.clone().break_block(&pos, None, false, false).await;
-                world.set_block_state(&pos, block_state_id).await;
+                world.set_block_state(&pos, block_state_id, FORCE_STATE).await;
                 true
             }
             Mode::Replace => {
-                world.set_block_state(&pos, block_state_id).await;
+                world.set_block_state(&pos, block_state_id, FORCE_STATE).await;
                 true
             }
             Mode::Keep => match world.get_block_state(&pos).await {
                 Ok(old_state) if old_state.air => {
-                    world.set_block_state(&pos, block_state_id).await;
+                    world.set_block_state(&pos, block_state_id, FORCE_STATE).await;
                     true
                 }
                 Ok(_) => false,

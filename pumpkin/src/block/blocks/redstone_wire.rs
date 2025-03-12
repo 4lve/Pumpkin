@@ -2,6 +2,7 @@ use std::sync::atomic::AtomicBool;
 
 use crate::block::redstone_view::get_received_redstone_power;
 use crate::entity::player::Player;
+use crate::world::NOTIFY_NEIGHBORS;
 use async_trait::async_trait;
 use pumpkin_data::block::{
     Block, BlockState, EastWireConnection, EnumVariants, Integer0To15, NorthWireConnection,
@@ -170,7 +171,7 @@ impl PumpkinBlock for RedstoneWireBlock {
         } else {
             // TODO: Break the block with drops
             world
-                .set_block_state(block_pos, Block::AIR.default_state_id)
+                .set_block_state(block_pos, Block::AIR.default_state_id, NOTIFY_NEIGHBORS)
                 .await;
         }
     }

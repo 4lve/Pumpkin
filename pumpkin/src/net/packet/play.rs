@@ -8,6 +8,7 @@ use crate::net::PlayerConfig;
 use crate::plugin::player::player_chat::PlayerChatEvent;
 use crate::plugin::player::player_command_send::PlayerCommandSendEvent;
 use crate::plugin::player::player_move::PlayerMoveEvent;
+use crate::world::NOTIFY_ALL;
 use crate::{
     command::CommandSender,
     entity::player::{ChatMode, Hand, Player},
@@ -1521,7 +1522,7 @@ impl Player {
                 )
                 .await
         {
-            let _replaced_id = world.set_block_state(&final_block_pos, new_state).await;
+            let _replaced_id = world.set_block_state(&final_block_pos, new_state, NOTIFY_ALL).await;
             server
                 .block_registry
                 .on_placed(world, &block, self, final_block_pos, server)

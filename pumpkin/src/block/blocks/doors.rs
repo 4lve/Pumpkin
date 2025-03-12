@@ -16,6 +16,8 @@ use crate::block::pumpkin_block::{BlockMetadata, PumpkinBlock};
 use crate::block::registry::BlockActionResult;
 use crate::block::registry::BlockRegistry;
 use crate::entity::player::Player;
+use crate::world::NOTIFY_ALL;
+use crate::world::NOTIFY_LISTENERS;
 use pumpkin_data::item::Item;
 use pumpkin_protocol::server::play::SUseItemOn;
 
@@ -40,10 +42,10 @@ async fn toggle_door(world: &World, block_pos: &BlockPos) {
     other_door_props.open = door_props.open;
 
     world
-        .set_block_state(block_pos, door_props.to_state_id(&block))
+        .set_block_state(block_pos, door_props.to_state_id(&block), NOTIFY_LISTENERS)
         .await;
     world
-        .set_block_state(&other_pos, other_door_props.to_state_id(&other_block))
+        .set_block_state(&other_pos, other_door_props.to_state_id(&other_block), NOTIFY_LISTENERS)
         .await;
 }
 
@@ -121,6 +123,7 @@ pub fn register_door_blocks(manager: &mut BlockRegistry) {
                     .set_block_state(
                         &location.offset(BlockDirection::Up.to_offset()),
                         door_props.to_state_id(block),
+                        NOTIFY_ALL
                     )
                     .await;
             }

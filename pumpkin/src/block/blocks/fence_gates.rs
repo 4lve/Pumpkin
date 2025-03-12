@@ -14,6 +14,7 @@ use crate::block::registry::BlockRegistry;
 use crate::entity::player::Player;
 use crate::server::Server;
 use crate::world::World;
+use crate::world::NOTIFY_LISTENERS;
 use pumpkin_data::item::Item;
 
 type FenceGateProperties = pumpkin_data::block::OakFenceGateLikeProperties;
@@ -24,7 +25,7 @@ pub async fn toggle_fence_gate(world: &World, block_pos: &BlockPos) -> u16 {
     let mut fence_gate_props = FenceGateProperties::from_state_id(state.id, &block);
     fence_gate_props.open = fence_gate_props.open.flip();
     world
-        .set_block_state(block_pos, fence_gate_props.to_state_id(&block))
+        .set_block_state(block_pos, fence_gate_props.to_state_id(&block), NOTIFY_LISTENERS)
         .await;
 
     fence_gate_props.to_state_id(&block)

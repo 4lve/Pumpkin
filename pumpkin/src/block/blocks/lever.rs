@@ -1,4 +1,5 @@
 use crate::entity::player::Player;
+use crate::world::NOTIFY_ALL;
 use async_trait::async_trait;
 use pumpkin_data::block::{Block, BlockFace, BlockState, LeverLikeProperties};
 use pumpkin_data::{
@@ -22,7 +23,7 @@ async fn toggle_lever(_server: &Server, world: &World, block_pos: &BlockPos) {
     let mut lever_props = LeverLikeProperties::from_state_id(state.id, &block);
     lever_props.powered = lever_props.powered.flip();
     world
-        .set_block_state(block_pos, lever_props.to_state_id(&block))
+        .set_block_state(block_pos, lever_props.to_state_id(&block), NOTIFY_ALL)
         .await;
 
     world.update_neighbors(block_pos, None).await;

@@ -4,7 +4,7 @@ use pumpkin_data::block::{
 use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::block::BlockDirection;
 
-use crate::world::World;
+use crate::world::{World, NOTIFY_LISTENERS};
 
 async fn get_strong_power_at(world: &World, block_pos: &BlockPos) -> u8 {
     world
@@ -62,7 +62,7 @@ pub async fn update(
         if world.get_block_state(block_pos).await.unwrap().id == state.id {
             wire_props.power = Integer0To15::from_index(power as u16);
             world
-                .set_block_state(block_pos, wire_props.to_state_id(&block))
+                .set_block_state(block_pos, wire_props.to_state_id(&block), NOTIFY_LISTENERS)
                 .await;
         }
 
