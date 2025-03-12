@@ -81,7 +81,6 @@ impl PumpkinBlock for RedstoneWireBlock {
         _new_state_id: u16,
         moved: bool,
     ) {
-        /*
         if !moved {
             let state = world.get_block_state(block_pos).await.unwrap();
             for direction in BlockDirection::all() {
@@ -94,16 +93,15 @@ impl PumpkinBlock for RedstoneWireBlock {
                 .await;
             RedstoneWireBlock::update_offset_neighbors(world, &block_pos).await;
         }
-        */
     }
 
     /// TODO: Fix this
-    async fn prepare(&self, world: &World, state: &BlockState, pos: &BlockPos) {
+    async fn prepare(&self, world: &World, state_id: u16, pos: &BlockPos) {
         let mut pos = *pos;
-        let wire_props = if state.id == 0 {
+        let wire_props = if state_id == 0 {
             RedstoneWireLikeProperties::default(&Block::REDSTONE_WIRE)
         } else {
-            RedstoneWireLikeProperties::from_state_id(state.id, &Block::REDSTONE_WIRE)
+            RedstoneWireLikeProperties::from_state_id(state_id, &Block::REDSTONE_WIRE)
         };
 
         for direction in BlockDirection::horizontal() {

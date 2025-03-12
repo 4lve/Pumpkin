@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    pin::Pin,
     sync::{Arc, atomic::Ordering},
 };
 
@@ -1128,49 +1129,82 @@ impl World {
     }
 
     /// Sets a block
-    pub async fn set_block_state(
-        &self,
-        position: &BlockPos,
+    pub fn set_block_state<'a>(
+        &'a self,
+        position: &'a BlockPos,
         block_state_id: u16,
-        _flags: BlockFlags,
-    ) -> u16 {
-        let (chunk_coordinate, relative_coordinates) = position.chunk_and_chunk_relative_position();
+        flags: BlockFlags,
+    ) -> Pin<Box<dyn Future<Output = u16> + 'a + Send>> {
+        Box::pin(async move {
+            let (chunk_coordinate, relative_coordinates) =
+                position.chunk_and_chunk_relative_position();
 
-        // Since we divide by 16 remnant can never exceed u8
-        let relative = ChunkRelativeBlockCoordinates::from(relative_coordinates);
+            // Since we divide by 16 remnant can never exceed u8
+            let relative = ChunkRelativeBlockCoordinates::from(relative_coordinates);
 
-        let chunk = self.receive_chunk(chunk_coordinate).await.0;
-        let replaced_block_state_id = chunk.read().await.subchunks.get_block(relative).unwrap();
-        chunk
-            .write()
-            .await
-            .subchunks
-            .set_block(relative, block_state_id);
+            let chunk = self.receive_chunk(chunk_coordinate).await.0;
+            let replaced_block_state_id = chunk.read().await.subchunks.get_block(relative).unwrap();
+            chunk
+                .write()
+                .await
+                .subchunks
+                .set_block(relative, block_state_id);
 
-        if replaced_block_state_id != block_state_id {
-            if let Some(pumpkin_block) = self
-                .block_registry
-                .get_pumpkin_block(&Block::from_state_id(block_state_id).unwrap())
-            {
-                pumpkin_block
-                    .on_state_replaced(
-                        self,
-                        &Block::from_state_id(block_state_id).unwrap(),
-                        position,
-                        replaced_block_state_id,
-                        block_state_id,
-                        false,
-                    )
-                    .await;
+            if replaced_block_state_id != block_state_id {
+                if let Some(pumpkin_block) = self
+                    .block_registry
+                    .get_pumpkin_block(&Block::from_state_id(block_state_id).unwrap())
+                {
+                    pumpkin_block
+                        .on_state_replaced(
+                            self,
+                            &Block::from_state_id(block_state_id).unwrap(),
+                            position,
+                            replaced_block_state_id,
+                            block_state_id,
+                            false,
+                        )
+                        .await;
+                }
             }
-        }
-        self.broadcast_packet_all(&CBlockUpdate::new(
-            position,
-            i32::from(block_state_id).into(),
-        ))
-        .await;
 
-        replaced_block_state_id
+            if flags.notify_neighbors {
+                self.update_neighbors(position, None).await;
+            }
+
+            if flags.notify_listeners {
+                // Mob AI
+            }
+
+            if !flags.force_state {
+                // Update old state
+                if let Some(pumpkin_block) = self
+                    .block_registry
+                    .get_pumpkin_block(&Block::from_state_id(replaced_block_state_id).unwrap())
+                {
+                    pumpkin_block
+                        .prepare(self, replaced_block_state_id, position)
+                        .await;
+                }
+                // Update Neighbors
+                self.update_neighbors_states(position).await;
+                // Update new state
+                if let Some(pumpkin_block) = self
+                    .block_registry
+                    .get_pumpkin_block(&Block::from_state_id(block_state_id).unwrap())
+                {
+                    pumpkin_block.prepare(self, block_state_id, position).await;
+                }
+            }
+
+            self.broadcast_packet_all(&CBlockUpdate::new(
+                position,
+                i32::from(block_state_id).into(),
+            ))
+            .await;
+
+            replaced_block_state_id
+        })
     }
 
     pub async fn schedule_block_tick(

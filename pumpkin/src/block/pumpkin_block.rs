@@ -75,7 +75,7 @@ pub trait PumpkinBlock: Send + Sync {
     ) {
     }
 
-    async fn prepare(&self, _world: &World, _state: &BlockState, _pos: &BlockPos) {}
+    async fn prepare(&self, _world: &World, _state_id: u16, _pos: &BlockPos) {}
 
     async fn broken(
         &self,
