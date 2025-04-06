@@ -14,6 +14,11 @@ pub enum Rarity {
     Epic,
 }
 
+pub const EMPTY_ITEM_STACK: ItemStack = ItemStack {
+    item_count: 0,
+    item: Item::AIR,
+};
+
 #[derive(Clone, Debug)]
 pub struct ItemStack {
     pub item_count: u8,
@@ -30,6 +35,10 @@ impl PartialEq for ItemStack {
 impl ItemStack {
     pub fn new(item_count: u8, item: Item) -> Self {
         Self { item_count, item }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.item_count == 0 || self.item.id == Item::AIR.id
     }
 
     /// Determines the mining speed for a block based on tool rules.

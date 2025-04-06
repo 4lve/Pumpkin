@@ -1,3 +1,4 @@
+use pumpkin_protocol::ItemStackSerializer;
 use rsa::pkcs1v15::{Signature as RsaPkcs1v15Signature, VerifyingKey};
 use rsa::signature::Verifier;
 use sha1::Sha1;
@@ -38,7 +39,6 @@ use pumpkin_protocol::client::play::{
     CBlockUpdate, COpenSignEditor, CPlayerInfoUpdate, CPlayerPosition, CSetContainerSlot,
     CSetHeldItem, CSystemChatMessage, EquipmentSlot, InitChat, PlayerAction,
 };
-use pumpkin_protocol::codec::slot::Slot;
 use pumpkin_protocol::codec::var_int::VarInt;
 use pumpkin_protocol::server::play::{
     SChunkBatch, SCookieResponse as SPCookieResponse, SPlayerSession, SUpdateSign,
@@ -553,8 +553,8 @@ impl Player {
         slot: usize,
         stack: ItemStack,
     ) {
+        /*
         inventory.increment_state_id();
-        let slot_data = Slot::from(&stack);
         if let Err(err) = inventory.set_slot(slot, Some(stack), false) {
             log::error!("Pick item set slot error: {err}");
         } else {
@@ -566,6 +566,7 @@ impl Player {
             );
             self.client.enqueue_packet(&dest_packet).await;
         }
+        */
     }
 
     pub async fn handle_pick_item_from_block(&self, pick_item: SPickItemFromBlock) {
@@ -1498,6 +1499,8 @@ impl Player {
         &self,
         packet: SSetCreativeSlot,
     ) -> Result<(), InventoryError> {
+        /*
+        TODO: Implement this
         if self.gamemode.load() != GameMode::Creative {
             return Err(InventoryError::PermissionError);
         }
@@ -1514,6 +1517,7 @@ impl Player {
             self.drop_item(item_stack.item.id, u32::from(item_stack.item_count))
                 .await;
         }
+         */
         Ok(())
     }
 

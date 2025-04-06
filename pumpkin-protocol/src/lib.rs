@@ -6,11 +6,13 @@ use std::{
 use aes::cipher::{BlockDecryptMut, BlockEncryptMut, BlockSizeUser, generic_array::GenericArray};
 use bytes::Bytes;
 use codec::{identifier::Identifier, var_int::VarInt};
+use pumpkin_data::item::Item;
 use pumpkin_util::text::{TextComponent, style::Style};
+use pumpkin_world::item::{EMPTY_ITEM_STACK, ItemStack};
 use ser::{NetworkWriteExt, ReadingError, WritingError, packet::Packet};
 use serde::{
     Deserialize, Serialize, Serializer,
-    de::{DeserializeSeed, Visitor},
+    de::{self, DeserializeSeed, SeqAccess, Visitor},
     ser::SerializeSeq,
 };
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -498,6 +500,78 @@ impl Serialize for LinkType {
             LinkType::Forums => VarInt(7).serialize(serializer),
             LinkType::News => VarInt(8).serialize(serializer),
             LinkType::Announcements => VarInt(9).serialize(serializer),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ItemStackSerializer(pub ItemStack);
+
+impl<'de> Deserialize<'de> for ItemStackSerializer {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = ItemStackSerializer;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a valid VarInt encoded in a byte sequence")
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let item_count = seq
+                    .next_element::<VarInt>()?
+                    .ok_or(de::Error::custom("Failed to decode VarInt"))?;
+                if item_count.0 == 0 {
+                    return Ok(ItemStackSerializer(EMPTY_ITEM_STACK));
+                }
+                let item_id = seq
+                    .next_element::<VarInt>()?
+                    .ok_or(de::Error::custom("Failed to decode VarInt"))?;
+                let num_components_to_add = seq
+                    .next_element::<VarInt>()?
+                    .ok_or(de::Error::custom("Failed to decode VarInt"))?;
+                let num_components_to_remove = seq
+                    .next_element::<VarInt>()?
+                    .ok_or(de::Error::custom("Failed to decode VarInt"))?;
+                if num_components_to_add.0 != 0 || num_components_to_remove.0 != 0 {
+                    return Err(de::Error::custom(
+                        "Slot components are currently unsupported",
+                    ));
+                }
+
+                Ok(ItemStackSerializer(ItemStack {
+                    item_count: item_count.0 as u8,
+                    item: Item::from_id(item_id.0 as u16).unwrap_or(Item::AIR),
+                }))
+            }
+        }
+
+        deserializer.deserialize_seq(Visitor)
+    }
+}
+
+impl Serialize for ItemStackSerializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if self.0.is_empty() {
+            let mut s = serializer.serialize_seq(Some(1))?;
+            s.serialize_element(&self.0.item_count)?;
+            s.end()
+        } else {
+            let mut s = serializer.serialize_seq(Some(4))?;
+            s.serialize_element(&self.0.item_count)?;
+            s.serialize_element(&self.0.item.id)?;
+            s.serialize_element(&VarInt(0))?;
+            s.serialize_element(&VarInt(0))?;
+            s.end()
         }
     }
 }

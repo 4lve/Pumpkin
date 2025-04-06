@@ -10,10 +10,10 @@ use pumpkin_inventory::drag_handler::DragHandler;
 use pumpkin_inventory::player::{SLOT_BOOT, SLOT_CHEST, SLOT_HELM, SLOT_HOTBAR_START, SLOT_LEG};
 use pumpkin_inventory::window_property::{WindowProperty, WindowPropertyTrait};
 use pumpkin_inventory::{InventoryError, OptionallyCombinedContainer, container_click};
+use pumpkin_protocol::ItemStackSerializer;
 use pumpkin_protocol::client::play::{
     CCloseContainer, COpenScreen, CSetContainerContent, CSetContainerProperty, CSetContainerSlot,
 };
-use pumpkin_protocol::codec::slot::Slot;
 use pumpkin_protocol::codec::var_int::VarInt;
 use pumpkin_protocol::server::play::SClickContainer;
 use pumpkin_util::text::TextComponent;
@@ -50,6 +50,8 @@ impl Player {
     }
 
     pub async fn set_container_content(&self, container: Option<&mut Box<dyn Container>>) {
+        /*
+        TODO: Implement this
         let mut inventory = self.inventory().lock().await;
 
         let total_opened_containers = inventory.total_opened_containers;
@@ -61,7 +63,7 @@ impl Player {
 
         let container = OptionallyCombinedContainer::new(&mut inventory, container);
 
-        let slots: Vec<Slot> = container
+        let slots: Vec<ItemStackSerializer> = container
             .all_slots_ref()
             .into_iter()
             .map(Slot::from)
@@ -80,6 +82,7 @@ impl Player {
             &carried_item,
         );
         self.client.enqueue_packet(&packet).await;
+         */
     }
 
     /// The official Minecraft client is weird, and will always just close *any* window that is opened when this gets sent
@@ -113,6 +116,7 @@ impl Player {
         server: &Arc<Server>,
         packet: SClickContainer,
     ) -> Result<(), InventoryError> {
+        /*
         let opened_container = self.get_open_container(server).await;
         let mut opened_container = match opened_container.as_ref() {
             Some(container) => Some(container.lock().await),
@@ -199,6 +203,7 @@ impl Player {
                 }
             }
         }
+        */
         Ok(())
     }
 
@@ -211,10 +216,12 @@ impl Player {
     ) -> Result<(), InventoryError> {
         // TODO: this will not update hotbar when server admin is peeking
         // TODO: check and iterate over all players in player inventory
+        /*
         let slot = Slot::from(item_stack);
         *state_id += 1;
         let packet = CSetContainerSlot::new(0, *state_id as i32, slot_index, &slot);
         self.client.enqueue_packet(&packet).await;
+        */
         Ok(())
     }
 
@@ -626,8 +633,9 @@ impl Player {
         &self,
         server: &Server,
         slot_index: usize,
-        slot: Slot,
+        slot: ItemStack,
     ) -> Result<(), InventoryError> {
+        let value = ItemStackSerializer(slot);
         for player in self.get_current_players_in_container(server).await {
             let mut inventory = player.inventory().lock().await;
             let total_opened_containers = inventory.total_opened_containers;
@@ -638,7 +646,7 @@ impl Player {
                 total_opened_containers as i8,
                 (inventory.state_id) as i32,
                 slot_index as i16,
-                &slot,
+                &value,
             );
             player.client.enqueue_packet(&packet).await;
         }

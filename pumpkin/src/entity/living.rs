@@ -8,12 +8,11 @@ use pumpkin_config::advanced_config;
 use pumpkin_data::entity::{EffectType, EntityStatus};
 use pumpkin_data::{damage::DamageType, sound::Sound};
 use pumpkin_nbt::tag::NbtTag;
+use pumpkin_protocol::client::play::{
+    CDamageEvent, CSetEquipment, EquipmentSlot, MetaDataType, Metadata,
+};
 use pumpkin_protocol::client::play::{CHurtAnimation, CTakeItemEntity};
 use pumpkin_protocol::codec::var_int::VarInt;
-use pumpkin_protocol::{
-    client::play::{CDamageEvent, CSetEquipment, EquipmentSlot, MetaDataType, Metadata},
-    codec::slot::Slot,
-};
 use pumpkin_util::math::vector3::Vector3;
 use pumpkin_world::item::ItemStack;
 use tokio::sync::Mutex;
@@ -55,9 +54,9 @@ impl LivingEntity {
     }
 
     pub async fn send_equipment_changes(&self, equipment: &[(EquipmentSlot, ItemStack)]) {
-        let equipment: Vec<(EquipmentSlot, Slot)> = equipment
+        let equipment: Vec<(EquipmentSlot, ItemStack)> = equipment
             .iter()
-            .map(|(slot, stack)| (*slot, Slot::from(stack)))
+            .map(|(slot, stack)| (*slot, stack.clone()))
             .collect();
         self.entity
             .world

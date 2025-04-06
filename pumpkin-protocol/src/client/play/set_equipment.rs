@@ -1,23 +1,24 @@
 use std::io::Write;
 
-use crate::ser::{NetworkWriteExt, WritingError, serializer::Serializer};
+use crate::{
+    ItemStackSerializer,
+    ser::{NetworkWriteExt, WritingError, serializer::Serializer},
+};
 use pumpkin_data::packet::clientbound::PLAY_SET_EQUIPMENT;
 use pumpkin_macros::packet;
+use pumpkin_world::item::ItemStack;
 use serde::Serialize;
 
-use crate::{
-    ClientPacket,
-    codec::{slot::Slot, var_int::VarInt},
-};
+use crate::{ClientPacket, codec::var_int::VarInt};
 
 #[packet(PLAY_SET_EQUIPMENT)]
 pub struct CSetEquipment {
     entity_id: VarInt,
-    equipment: Vec<(EquipmentSlot, Slot)>,
+    equipment: Vec<(EquipmentSlot, ItemStack)>,
 }
 
 impl CSetEquipment {
-    pub fn new(entity_id: VarInt, equipment: Vec<(EquipmentSlot, Slot)>) -> Self {
+    pub fn new(entity_id: VarInt, equipment: Vec<(EquipmentSlot, ItemStack)>) -> Self {
         Self {
             entity_id,
             equipment,
@@ -39,8 +40,7 @@ impl ClientPacket for CSetEquipment {
                 write.write_i8_be(*slot as i8)?;
             }
             let mut serializer = Serializer::new(&mut write);
-            equipment
-                .1
+            ItemStackSerializer(equipment.1.clone())
                 .serialize(&mut serializer)
                 .expect("Could not serialize `EquipmentSlot`");
         }

@@ -54,6 +54,7 @@ pub async fn standard_open_container<C: Container + Default + 'static>(
     server: &Server,
     window_type: WindowType,
 ) {
+    /*
     let entity_id = player.entity_id();
     // If container exists, add player to container, otherwise create new container
     if let Some(container_id) = server.get_container_id(location, block.clone()).await {
@@ -73,6 +74,7 @@ pub async fn standard_open_container<C: Container + Default + 'static>(
         player.open_container.store(Some(new_id.into()));
     }
     player.open_container(server, window_type).await;
+     */
 }
 
 pub async fn standard_open_container_unique<C: Container + Default + 'static>(
@@ -82,6 +84,7 @@ pub async fn standard_open_container_unique<C: Container + Default + 'static>(
     server: &Server,
     window_type: WindowType,
 ) {
+    /*
     {
         let entity_id = player.entity_id();
         let mut open_containers = server.open_containers.write().await;
@@ -120,12 +123,15 @@ pub async fn standard_open_container_unique<C: Container + Default + 'static>(
         }
     }
     player.open_container(server, window_type).await;
+    */
 }
 
 pub async fn close_all_in_container(player: &Player, container: &OpenContainer) {
+    /*
+    TODO: Implement this
     for id in container.all_player_ids() {
         if let Some(remote_player) = player.world().await.get_player_by_id(id).await {
             remote_player.close_container().await;
         }
-    }
+    } */
 }
