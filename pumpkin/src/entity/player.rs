@@ -1524,7 +1524,7 @@ impl NBTStorage for PlayerInventory {
                     if let Some(slot_byte) = item_compound.get_byte("Slot") {
                         let slot = slot_byte as usize;
                         if let Some(item_stack) = ItemStack::read_item_stack(item_compound) {
-                            let _ = self.set_slot(slot, Some(item_stack), true);
+                            //let _ = self.set_slot(slot, Some(item_stack), true); TODO: Implement
                         }
                     }
                 }

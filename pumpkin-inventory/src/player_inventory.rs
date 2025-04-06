@@ -1,9 +1,10 @@
 use crate::container_click::MouseClick;
 use crate::crafting::check_if_matches_crafting;
 use crate::equipment_slot::EquipmentSlot;
-use crate::inventory::Clearable;
+use crate::inventory::{Clearable, Inventory, InventoryIterator};
 use crate::{InventoryError, WindowType};
 use pumpkin_data::item::Item;
+use pumpkin_protocol::client::play::Player;
 use pumpkin_world::item::ItemStack;
 use std::collections::HashMap;
 use std::iter::Chain;
@@ -20,23 +21,7 @@ use std::slice::IterMut;
 
 */
 
-pub const SLOT_CRAFT_OUTPUT: usize = 0;
-pub const SLOT_CRAFT_INPUT_START: usize = 1;
-pub const SLOT_CRAFT_INPUT_END: usize = 4;
-pub const SLOT_HELM: usize = 5;
-pub const SLOT_CHEST: usize = 6;
-pub const SLOT_LEG: usize = 7;
-pub const SLOT_BOOT: usize = 8;
-pub const SLOT_INV_START: usize = 9;
-pub const SLOT_INV_END: usize = 35;
-pub const SLOT_HOTBAR_START: usize = 36;
-pub const SLOT_HOTBAR_END: usize = 44;
-pub const SLOT_OFFHAND: usize = 45;
-
-pub const SLOT_HOTBAR_INDEX: usize = SLOT_HOTBAR_END - SLOT_HOTBAR_START;
-pub const SLOT_MAX: usize = SLOT_OFFHAND;
-pub const SLOT_INDEX_OUTSIDE: i16 = -999;
-
+#[derive(Debug, Clone)]
 pub struct PlayerInventory {
     pub main_inventory: [ItemStack; Self::MAIN_SIZE],
     pub equipment_slots: HashMap<i32, EquipmentSlot>,
@@ -62,6 +47,10 @@ impl PlayerInventory {
     /// getSelectedStack in source
     pub fn held_item(&self) -> &ItemStack {
         self.main_inventory.get(self.selected_slot).unwrap()
+    }
+
+    pub fn is_valid_hotbar_index(slot: usize) -> bool {
+        slot <= Self::HOTBAR_SIZE
     }
 
     fn build_equipment_slots() -> HashMap<i32, EquipmentSlot> {
@@ -90,6 +79,57 @@ impl PlayerInventory {
 impl Clearable for PlayerInventory {
     fn clear(&mut self) {
         todo!()
+    }
+}
+
+impl Inventory for PlayerInventory {
+    fn size(&self) -> usize {
+        self.main_inventory.len() + self.equipment_slots.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        for item in self.main_inventory.iter() {
+            if !item.is_empty() {
+                return false;
+            }
+        }
+
+        // TODO: Check equipment slots
+
+        true
+    }
+
+    fn get_stack(&self, slot: usize) -> ItemStack {
+        if slot < self.main_inventory.len() {
+            self.main_inventory[slot]
+        } else {
+            todo!()
+        }
+    }
+
+    fn remove_stack_specific(&mut self, slot: usize, amount: u8) -> ItemStack {
+        todo!()
+    }
+
+    fn remove_stack(&mut self, slot: usize) -> ItemStack {
+        todo!()
+    }
+
+    fn set_stack(&mut self, slot: usize, stack: ItemStack) {
+        todo!()
+    }
+
+    fn mark_dirty(&mut self) {
+        self.change_count += 1;
+    }
+}
+
+impl IntoIterator for PlayerInventory {
+    type Item = ItemStack;
+    type IntoIter = InventoryIterator<PlayerInventory>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        InventoryIterator::new(self)
     }
 }
 

@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+#[derive(Debug, Clone, Copy)]
 pub enum EquipmentType {
     Hand,
     HumanoidArmor,
@@ -7,6 +8,7 @@ pub enum EquipmentType {
     Saddle,
 }
 
+#[derive(Debug, Clone)]
 pub struct EquipmentSlot {
     pub slot_type: EquipmentType,
     pub entity_id: i32,
