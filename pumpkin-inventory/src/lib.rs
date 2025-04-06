@@ -1,20 +1,20 @@
 use crate::container_click::MouseClick;
-use crate::player::PlayerInventory;
+use crate::player_inventory::PlayerInventory;
 use pumpkin_data::screen::WindowType;
 use pumpkin_world::item::ItemStack;
 
 pub mod container_click;
 mod crafting;
 pub mod drag_handler;
+pub mod equipment_slot;
 mod error;
 pub mod inventory;
-mod open_container;
-pub mod player;
+pub mod player_inventory;
 pub mod window_property;
 
 pub use error::InventoryError;
-pub use open_container::*;
 
+/*
 pub struct ContainerStruct<const SLOTS: usize>([Option<ItemStack>; SLOTS]);
 
 // `Container` needs to be `Sync + Send` to be able to be in the async server.
@@ -305,3 +305,4 @@ impl<'a> Container for OptionallyCombinedContainer<'a, 'a> {
         }
     }
 }
+ */

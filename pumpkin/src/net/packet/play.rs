@@ -31,7 +31,7 @@ use pumpkin_data::item::Item;
 use pumpkin_data::sound::Sound;
 use pumpkin_data::sound::SoundCategory;
 use pumpkin_inventory::InventoryError;
-use pumpkin_inventory::player::{
+use pumpkin_inventory::player_inventory::{
     PlayerInventory, SLOT_HOTBAR_END, SLOT_HOTBAR_START, SLOT_OFFHAND,
 };
 use pumpkin_macros::send_cancellable;
@@ -1447,7 +1447,7 @@ impl Player {
                         server,
                         slot_id as i16,
                         inventory.held_item().cloned().as_ref(),
-                        &mut inventory.state_id,
+                        &mut inventory.change_count,
                     )
                     .await;
             }
@@ -1559,10 +1559,10 @@ impl Player {
                 container.remove_player(self.entity_id());
 
                 let mut inventory = self.inventory().lock().await;
-                if inventory.state_id >= 2 {
-                    inventory.state_id -= 2;
+                if inventory.change_count >= 2 {
+                    inventory.change_count -= 2;
                 } else {
-                    inventory.state_id = 0;
+                    inventory.change_count = 0;
                 }
             }
             self.open_container.store(None);

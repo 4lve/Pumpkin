@@ -1,5 +1,5 @@
+use crate::InventoryError;
 use crate::container_click::MouseDragType;
-use crate::{Container, InventoryError};
 use pumpkin_world::item::ItemStack;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -48,6 +48,8 @@ impl DragHandler {
         }
         Ok(())
     }
+
+    /*
 
     pub async fn apply_drag<T: Container>(
         &self,
@@ -140,6 +142,7 @@ impl DragHandler {
         }
         Ok(())
     }
+     */
 }
 #[derive(Debug)]
 struct Drag {

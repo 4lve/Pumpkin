@@ -26,12 +26,7 @@ impl AttackType {
 
         let sprinting = entity.sprinting.load(std::sync::atomic::Ordering::Relaxed);
         let on_ground = entity.on_ground.load(std::sync::atomic::Ordering::Relaxed);
-        let sword = player
-            .inventory()
-            .lock()
-            .await
-            .held_item()
-            .is_some_and(ItemStack::is_sword);
+        let sword = player.inventory().lock().await.held_item().is_sword();
 
         let is_strong = attack_cooldown_progress > 0.9;
         if sprinting && is_strong {

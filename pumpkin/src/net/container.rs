@@ -2,14 +2,15 @@ use crate::entity::player::Player;
 use crate::server::Server;
 use pumpkin_data::item::Item;
 use pumpkin_data::screen::WindowType;
-use pumpkin_inventory::Container;
 use pumpkin_inventory::container_click::{
     Click, ClickType, DropType, KeyClick, MouseClick, MouseDragState, MouseDragType,
 };
 use pumpkin_inventory::drag_handler::DragHandler;
-use pumpkin_inventory::player::{SLOT_BOOT, SLOT_CHEST, SLOT_HELM, SLOT_HOTBAR_START, SLOT_LEG};
+use pumpkin_inventory::player_inventory::{
+    SLOT_BOOT, SLOT_CHEST, SLOT_HELM, SLOT_HOTBAR_START, SLOT_LEG,
+};
 use pumpkin_inventory::window_property::{WindowProperty, WindowPropertyTrait};
-use pumpkin_inventory::{InventoryError, OptionallyCombinedContainer, container_click};
+use pumpkin_inventory::{InventoryError, container_click};
 use pumpkin_protocol::ItemStackSerializer;
 use pumpkin_protocol::client::play::{
     CCloseContainer, COpenScreen, CSetContainerContent, CSetContainerProperty, CSetContainerSlot,
@@ -20,7 +21,7 @@ use pumpkin_util::text::TextComponent;
 use pumpkin_util::{GameMode, MutableSplitSlice};
 use pumpkin_world::item::ItemStack;
 use std::sync::Arc;
-
+/*
 impl Player {
     pub async fn open_container(&self, server: &Server, window_type: WindowType) {
         let mut inventory = self.inventory().lock().await;
@@ -49,7 +50,7 @@ impl Player {
         self.set_container_content(container.as_deref_mut()).await;
     }
 
-    pub async fn set_container_content(&self, container: Option<&mut Box<dyn Container>>) {
+    //pub async fn set_container_content(&self, container: Option<&mut Box<dyn Container>>) {
         /*
         TODO: Implement this
         let mut inventory = self.inventory().lock().await;
@@ -83,7 +84,7 @@ impl Player {
         );
         self.client.enqueue_packet(&packet).await;
          */
-    }
+    //}
 
     /// The official Minecraft client is weird, and will always just close *any* window that is opened when this gets sent
     // TODO: is this just bc ids are not synced?
@@ -644,7 +645,7 @@ impl Player {
             inventory.increment_state_id();
             let packet = CSetContainerSlot::new(
                 total_opened_containers as i8,
-                (inventory.state_id) as i32,
+                (inventory.change_count) as i32,
                 slot_index as i16,
                 &value,
             );
@@ -731,3 +732,4 @@ impl Player {
         self.set_container_content(None).await;
     }
 }
+ */

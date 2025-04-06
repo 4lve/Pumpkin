@@ -14,12 +14,7 @@ pub enum Rarity {
     Epic,
 }
 
-pub const EMPTY_ITEM_STACK: ItemStack = ItemStack {
-    item_count: 0,
-    item: Item::AIR,
-};
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub struct ItemStack {
     pub item_count: u8,
     // TODO: Should this be a ref? all of our items are const
@@ -27,6 +22,11 @@ pub struct ItemStack {
 }
 
 impl ItemStack {
+    pub const EMPTY: ItemStack = ItemStack {
+        item_count: 0,
+        item: Item::AIR,
+    };
+
     pub fn new(item_count: u8, item: Item) -> Self {
         Self { item_count, item }
     }

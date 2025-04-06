@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use pumpkin_inventory::Container;
+use pumpkin_inventory::inventory::Clearable;
 use pumpkin_util::text::TextComponent;
 use pumpkin_util::text::click::ClickEvent;
 use pumpkin_util::text::color::NamedColor;
@@ -22,18 +22,8 @@ const ARG_TARGET: &str = "target";
 
 async fn clear_player(target: &Player) -> usize {
     let mut inventory = target.inventory().lock().await;
-
-    let slots = inventory.all_slots();
-    let items_count = slots
-        .iter()
-        .filter_map(|slot| slot.as_ref().map(|slot| slot.item_count as usize))
-        .sum();
-    for slot in slots {
-        *slot = None;
-    }
-    drop(inventory);
-    target.set_container_content(None).await;
-    items_count
+    inventory.clear();
+    0
 }
 
 fn clear_command_text_output(item_count: usize, targets: &[Arc<Player>]) -> TextComponent {

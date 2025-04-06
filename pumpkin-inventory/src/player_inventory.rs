@@ -1,8 +1,11 @@
 use crate::container_click::MouseClick;
 use crate::crafting::check_if_matches_crafting;
-use crate::{Container, InventoryError, WindowType, handle_item_change};
+use crate::equipment_slot::EquipmentSlot;
+use crate::inventory::Clearable;
+use crate::{InventoryError, WindowType};
 use pumpkin_data::item::Item;
 use pumpkin_world::item::ItemStack;
+use std::collections::HashMap;
 use std::iter::Chain;
 use std::slice::IterMut;
 
@@ -35,19 +38,62 @@ pub const SLOT_MAX: usize = SLOT_OFFHAND;
 pub const SLOT_INDEX_OUTSIDE: i16 = -999;
 
 pub struct PlayerInventory {
-    // Main inventory + hotbar
-    crafting: [Option<ItemStack>; 4],
-    crafting_output: Option<ItemStack>,
-    items: [Option<ItemStack>; 36],
-    armor: [Option<ItemStack>; 4],
-    offhand: Option<ItemStack>,
-    /// The hotbar's current selected slot.
-    pub selected: usize,
-    pub state_id: u32,
-    // Notchian server wraps this value at 100, we can just keep it as a u8 that automatically wraps.
-    pub total_opened_containers: i32,
+    pub main_inventory: [ItemStack; Self::MAIN_SIZE],
+    pub equipment_slots: HashMap<i32, EquipmentSlot>,
+    pub change_count: u32,
+    pub selected_slot: usize,
 }
 
+impl PlayerInventory {
+    const MAIN_SIZE: usize = 36;
+    const HOTBAR_SIZE: usize = 9;
+    const OFF_HAND_SLOT: usize = 45;
+
+    // TODO: Add inventory load from nbt
+    pub fn new() -> Self {
+        Self {
+            main_inventory: [ItemStack::EMPTY; Self::MAIN_SIZE],
+            equipment_slots: Self::build_equipment_slots(),
+            change_count: 0,
+            selected_slot: 0,
+        }
+    }
+
+    /// getSelectedStack in source
+    pub fn held_item(&self) -> &ItemStack {
+        self.main_inventory.get(self.selected_slot).unwrap()
+    }
+
+    fn build_equipment_slots() -> HashMap<i32, EquipmentSlot> {
+        let mut equipment_slots = HashMap::new();
+        equipment_slots.insert(
+            EquipmentSlot::FEET.get_offset_entity_slot_id(Self::MAIN_SIZE as i32),
+            EquipmentSlot::FEET,
+        );
+        equipment_slots.insert(
+            EquipmentSlot::LEGS.get_offset_entity_slot_id(Self::MAIN_SIZE as i32),
+            EquipmentSlot::LEGS,
+        );
+        equipment_slots.insert(
+            EquipmentSlot::CHEST.get_offset_entity_slot_id(Self::MAIN_SIZE as i32),
+            EquipmentSlot::CHEST,
+        );
+        equipment_slots.insert(
+            EquipmentSlot::HEAD.get_offset_entity_slot_id(Self::MAIN_SIZE as i32),
+            EquipmentSlot::HEAD,
+        );
+        equipment_slots.insert(40, EquipmentSlot::OFF_HAND);
+        equipment_slots
+    }
+}
+
+impl Clearable for PlayerInventory {
+    fn clear(&mut self) {
+        todo!()
+    }
+}
+
+/*
 impl Default for PlayerInventory {
     fn default() -> Self {
         Self::new()
@@ -65,11 +111,12 @@ impl PlayerInventory {
             armor: [const { None }; 4],
             offhand: None,
             // TODO: What happens when a player spawns in with a different index?
-            selected: 0,
+            selected_slot: 0,
             state_id: 0,
             total_opened_containers: 2,
         }
     }
+
     /// Set the contents of an item in a slot.
     ///
     /// ## `item`
@@ -134,11 +181,11 @@ impl PlayerInventory {
     }
     pub fn set_selected(&mut self, slot: usize) {
         debug_assert!((0..=SLOT_HOTBAR_INDEX).contains(&slot));
-        self.selected = slot;
+        self.selected_slot = slot as u8;
     }
 
     pub fn get_selected_slot(&self) -> usize {
-        self.selected + SLOT_HOTBAR_START
+        self.selected_slot as usize + SLOT_HOTBAR_START
     }
 
     pub fn increment_state_id(&mut self) {
@@ -152,13 +199,13 @@ impl PlayerInventory {
 
     // NOTE: We actually want &mut Option instead of Option<&mut>
     pub fn held_item_mut(&mut self) -> &mut Option<ItemStack> {
-        debug_assert!((0..=SLOT_HOTBAR_INDEX).contains(&self.selected));
+        debug_assert!((0..=SLOT_HOTBAR_INDEX).contains(&(self.selected_slot as usize)));
         &mut self.items[self.get_selected_slot() - SLOT_INV_START]
     }
 
     #[inline]
     pub fn held_item(&self) -> Option<&ItemStack> {
-        debug_assert!((0..=SLOT_HOTBAR_INDEX).contains(&self.selected));
+        debug_assert!((0..=SLOT_HOTBAR_INDEX).contains(&(self.selected_slot as usize)));
         self.items[self.get_selected_slot() - SLOT_INV_START].as_ref()
     }
 
@@ -176,7 +223,7 @@ impl PlayerInventory {
 
     pub fn get_empty_hotbar_slot(&self) -> usize {
         if self.held_item().is_none() {
-            return self.selected;
+            return self.selected_slot as usize;
         }
 
         for slot in SLOT_HOTBAR_START..=SLOT_HOTBAR_END {
@@ -185,7 +232,7 @@ impl PlayerInventory {
             }
         }
 
-        self.selected
+        self.selected_slot as usize
     }
 
     pub fn get_slot_filtered<F>(&self, filter: &F) -> Option<usize>
@@ -201,7 +248,9 @@ impl PlayerInventory {
             [SLOT_HOTBAR_START - SLOT_INV_START..=SLOT_HOTBAR_END - SLOT_INV_START]
             .iter()
             .enumerate()
-            .position(|(index, item_stack)| index != self.selected && filter(item_stack.as_ref()))
+            .position(|(index, item_stack)| {
+                index != self.selected_slot as usize && filter(item_stack.as_ref())
+            })
         {
             Some(index + SLOT_HOTBAR_START)
         }
@@ -380,3 +429,4 @@ impl Container for PlayerInventory {
         (SLOT_CRAFT_INPUT_START..=SLOT_CRAFT_INPUT_END).contains(slot)
     }
 }
+ */

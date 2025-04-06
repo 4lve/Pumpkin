@@ -41,7 +41,7 @@ use pumpkin_data::{
     particle::Particle,
     sound::{Sound, SoundCategory},
 };
-use pumpkin_inventory::player::{
+use pumpkin_inventory::player_inventory::{
     PlayerInventory, SLOT_BOOT, SLOT_CRAFT_INPUT_END, SLOT_CRAFT_INPUT_START, SLOT_HELM,
     SLOT_HOTBAR_END, SLOT_INV_START, SLOT_OFFHAND,
 };
@@ -392,7 +392,7 @@ impl Player {
         let config = &advanced_config().pvp;
 
         let inventory = self.inventory().lock().await;
-        let item_slot = inventory.held_item();
+        let item_stack = inventory.held_item();
 
         let base_damage = 1.0;
         let base_attack_speed = 4.0;
@@ -402,21 +402,21 @@ impl Player {
         let mut add_speed = 0.0;
 
         // Get the attack damage
-        if let Some(item_stack) = item_slot {
-            // TODO: this should be cached in memory
-            if let Some(modifiers) = item_stack.item.components.attribute_modifiers {
-                for item_mod in modifiers {
-                    if item_mod.operation == Operation::AddValue {
-                        if item_mod.id == "minecraft:base_attack_damage" {
-                            add_damage = item_mod.amount;
-                        }
-                        if item_mod.id == "minecraft:base_attack_speed" {
-                            add_speed = item_mod.amount;
-                        }
+
+        // TODO: this should be cached in memory
+        if let Some(modifiers) = item_stack.item.components.attribute_modifiers {
+            for item_mod in modifiers {
+                if item_mod.operation == Operation::AddValue {
+                    if item_mod.id == "minecraft:base_attack_damage" {
+                        add_damage = item_mod.amount;
+                    }
+                    if item_mod.id == "minecraft:base_attack_speed" {
+                        add_speed = item_mod.amount;
                     }
                 }
             }
         }
+
         drop(inventory);
 
         let attack_speed = base_attack_speed + add_speed;
@@ -1173,7 +1173,7 @@ impl Player {
                 .lock()
                 .await
                 .held_item()
-                .map_or_else(|| false, |e| e.is_correct_for_drops(block_name))
+                .is_correct_for_drops(block_name)
     }
 
     pub async fn get_mining_speed(&self, block_name: &str) -> f32 {
@@ -1181,8 +1181,8 @@ impl Player {
             .inventory
             .lock()
             .await
-            .get_mining_speed(block_name)
-            .await;
+            .held_item()
+            .get_speed(block_name);
         // Haste
         if self.living_entity.has_effect(EffectType::Haste).await
             || self
@@ -1259,13 +1259,15 @@ impl Player {
     }
 
     pub async fn drop_held_item(&self, drop_stack: bool) {
+        todo!()
+        /*
         let mut inv = self.inventory.lock().await;
         if let Some(item_stack) = inv.held_item_mut() {
             let drop_amount = if drop_stack { item_stack.item_count } else { 1 };
             self.drop_item(item_stack.item.id, u32::from(drop_amount))
                 .await;
             inv.decrease_current_stack(drop_amount);
-        }
+        } */
     }
 
     pub async fn send_system_message(&self, text: &TextComponent) {
@@ -1404,12 +1406,15 @@ impl Player {
 
     /// Send the player's inventory to the client.
     pub async fn send_inventory(&self) {
+        // TODO: Implement
+        /*
         self.set_container_content(None).await;
         self.client
             .send_packet_now(&CSetHeldItem::new(
-                self.inventory.lock().await.selected as i8,
+                self.inventory.lock().await.selected_slot as i8,
             ))
             .await;
+         */
     }
 }
 
@@ -1468,7 +1473,7 @@ impl NBTStorage for Player {
 impl NBTStorage for PlayerInventory {
     async fn write_nbt(&self, nbt: &mut NbtCompound) {
         // Save the selected slot (hotbar)
-        nbt.put_int("SelectedItemSlot", self.selected as i32);
+        nbt.put_int("SelectedItemSlot", self.selected_slot as i32);
 
         // Create inventory list with the correct capacity (inventory size)
         let mut vec: Vec<NbtTag> = Vec::with_capacity(SLOT_OFFHAND);
@@ -1482,7 +1487,9 @@ impl NBTStorage for PlayerInventory {
                 vec.push(NbtTag::Compound(item_compound));
             }
         };
+        // TODO: Implement
 
+        /*
         // Crafting input slots
         for slot in SLOT_CRAFT_INPUT_START..=SLOT_CRAFT_INPUT_END {
             add_item(slot, self.crafting_slots()[slot - SLOT_CRAFT_INPUT_START]);
@@ -1500,6 +1507,7 @@ impl NBTStorage for PlayerInventory {
 
         // Offhand
         add_item(SLOT_OFFHAND, self.offhand_slot());
+         */
 
         // Save the inventory list
         nbt.put("Inventory", NbtTag::List(vec.into_boxed_slice()));
@@ -1507,7 +1515,7 @@ impl NBTStorage for PlayerInventory {
 
     async fn read_nbt(&mut self, nbt: &mut NbtCompound) {
         // Read selected hotbar slot
-        self.selected = nbt.get_int("SelectedItemSlot").unwrap_or(0) as usize;
+        self.selected_slot = nbt.get_int("SelectedItemSlot").unwrap_or(0) as usize;
 
         // Process inventory list
         if let Some(inventory_list) = nbt.get_list("Inventory") {
@@ -1663,8 +1671,9 @@ impl Player {
                     .await;
             }
             SClickContainer::PACKET_ID => {
-                self.handle_click_container(server, SClickContainer::read(payload)?)
-                    .await?;
+                todo!()
+                //self.handle_click_container(server, SClickContainer::read(payload)?)
+                //    .await?;
             }
             SSetHeldItem::PACKET_ID => {
                 self.handle_set_held_item(SSetHeldItem::read(payload)?)

@@ -8,7 +8,7 @@ use bytes::Bytes;
 use codec::{identifier::Identifier, var_int::VarInt};
 use pumpkin_data::item::Item;
 use pumpkin_util::text::{TextComponent, style::Style};
-use pumpkin_world::item::{EMPTY_ITEM_STACK, ItemStack};
+use pumpkin_world::item::ItemStack;
 use ser::{NetworkWriteExt, ReadingError, WritingError, packet::Packet};
 use serde::{
     Deserialize, Serialize, Serializer,
@@ -528,7 +528,7 @@ impl<'de> Deserialize<'de> for ItemStackSerializer {
                     .next_element::<VarInt>()?
                     .ok_or(de::Error::custom("Failed to decode VarInt"))?;
                 if item_count.0 == 0 {
-                    return Ok(ItemStackSerializer(EMPTY_ITEM_STACK));
+                    return Ok(ItemStackSerializer(ItemStack::EMPTY));
                 }
                 let item_id = seq
                     .next_element::<VarInt>()?

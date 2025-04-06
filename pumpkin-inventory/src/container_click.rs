@@ -1,4 +1,4 @@
-use crate::{InventoryError, player::SLOT_INDEX_OUTSIDE};
+use crate::{InventoryError, player_inventory::SLOT_INDEX_OUTSIDE};
 use pumpkin_protocol::server::play::SlotActionType;
 use pumpkin_world::item::ItemStack;
 

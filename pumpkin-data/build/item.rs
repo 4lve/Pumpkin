@@ -237,7 +237,7 @@ pub(crate) fn build() -> TokenStream {
         use pumpkin_util::text::TextComponent;
         use crate::tag::{Tagable, RegistryKey};
 
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, Copy)]
         pub struct Item {
             pub id: u16,
             pub registry_key: &'static str,
