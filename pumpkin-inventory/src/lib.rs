@@ -7,6 +7,7 @@ pub mod container_click;
 mod crafting;
 pub mod drag_handler;
 mod error;
+pub mod inventory;
 mod open_container;
 pub mod player;
 pub mod window_property;

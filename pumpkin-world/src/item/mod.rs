@@ -26,12 +26,6 @@ pub struct ItemStack {
     pub item: Item,
 }
 
-impl PartialEq for ItemStack {
-    fn eq(&self, other: &Self) -> bool {
-        self.item.id == other.item.id
-    }
-}
-
 impl ItemStack {
     pub fn new(item_count: u8, item: Item) -> Self {
         Self { item_count, item }
@@ -150,5 +144,13 @@ impl ItemStack {
 
     pub fn get_max_stack_size(&self) -> u8 {
         self.item.components.max_stack_size
+    }
+
+    pub fn get_item(&self) -> &Item {
+        if self.is_empty() {
+            &Item::AIR
+        } else {
+            &self.item
+        }
     }
 }

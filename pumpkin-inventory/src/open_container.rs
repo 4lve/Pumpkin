@@ -179,11 +179,12 @@ impl Container for CraftingTable {
                 self.input[2][2].as_ref(),
             ],
         ];
-
         let new_output = check_if_matches_crafting(check);
-        let result = new_output != self.output
-            || self.input.iter().flatten().any(|s| s.is_some())
-            || new_output.is_some();
+        let result = match (&new_output, &self.output) {
+            (Some(i), Some(o)) => i.item.id != o.item.id,
+            (None, None) => false,
+            _ => true,
+        } || self.input.iter().flatten().any(|s| s.is_some());
 
         self.output = new_output;
         result
