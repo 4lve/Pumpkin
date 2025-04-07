@@ -13,6 +13,10 @@ pub trait Inventory: Send + Sync + Clone + Sized + IntoIterator<Item = ItemStack
 
     fn remove_stack_specific(&mut self, slot: usize, amount: u8) -> ItemStack;
 
+    fn get_max_count_per_stack() -> u8 {
+        99
+    }
+
     fn remove_stack(&mut self, slot: usize) -> ItemStack;
 
     fn set_stack(&mut self, slot: usize, stack: ItemStack);

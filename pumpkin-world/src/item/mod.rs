@@ -35,6 +35,31 @@ impl ItemStack {
         self.item_count == 0 || self.item.id == Item::AIR.id
     }
 
+    pub fn split(&mut self, amount: u8) -> Self {
+        let min = amount.min(self.item_count);
+        let stack = self.copy_with_count(min);
+        self.decrement(min);
+        stack
+    }
+
+    pub fn copy_with_count(&self, count: u8) -> Self {
+        let mut stack = self.clone();
+        stack.item_count = count;
+        stack
+    }
+
+    pub fn decrement(&mut self, amount: u8) {
+        self.item_count = self.item_count.saturating_sub(amount);
+    }
+
+    pub fn increment(&mut self, amount: u8) {
+        self.item_count = self.item_count.saturating_add(amount);
+    }
+
+    pub fn are_items_and_components_equal(&self, other: &Self) -> bool {
+        self.item == other.item //TODO: && self.item.components == other.item.components
+    }
+
     /// Determines the mining speed for a block based on tool rules.
     /// Direct matches return immediately, tagged blocks are checked separately.
     /// If no match is found, returns the tool's default mining speed or `1.0`.
