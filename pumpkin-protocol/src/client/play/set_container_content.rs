@@ -24,7 +24,6 @@ impl<'a> CSetContainerContent<'a> {
         Self {
             window_id,
             state_id,
-            count: slots.len().into(),
             slot_data: slots,
             carried_item,
         }
