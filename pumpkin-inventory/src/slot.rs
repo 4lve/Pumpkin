@@ -16,6 +16,8 @@ pub trait Slot {
 
     fn get_index(&self) -> usize;
 
+    fn set_index(&mut self, index: usize);
+
     fn on_quick_transfer(&self, new_item: ItemStack, original: ItemStack) {
         let diff = new_item.item_count - original.item_count;
         if diff > 0 {
