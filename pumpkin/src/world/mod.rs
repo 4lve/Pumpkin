@@ -748,7 +748,7 @@ impl World {
             );
 
         // log::debug!("spawning list size {}", spawn_list.len());
-        log::debug!("spawning counter {:?}", spawn_state.mob_category_counts);
+        log::trace!("spawning counter {:?}", spawn_state.mob_category_counts);
 
         spawning_chunks.shuffle(&mut rng());
 
@@ -757,7 +757,7 @@ impl World {
             self.tick_spawning_chunk(pos, chunk, &spawn_list, &mut spawn_state)
                 .await;
         }
-        log::debug!(
+        log::trace!(
             "Spawning entity took {:?}, getting chunks {:?}, spawning chunks: {}, avg {:?} per chunk",
             spawn_entity_clock_start.elapsed(),
             get_chunks_clock,
@@ -1859,13 +1859,27 @@ impl World {
 
         // Sort such that the first chunks are closest to the center.
         let mut chunks = chunks;
+        let mut chunks_with_priority = chunks
+            .iter()
+            .map(|pos| {
+                let rel_x = pos.x - center_chunk.x;
+                let rel_z = pos.y - center_chunk.y;
+                let dst = rel_x * rel_x + rel_z * rel_z;
+                (*pos, dst as u32)
+            })
+            .collect::<Vec<(Vector2<i32>, u32)>>();
+        chunks_with_priority.sort_unstable_by_key(|data| data.1);
         chunks.sort_unstable_by_key(|pos| {
             let rel_x = pos.x - center_chunk.x;
             let rel_z = pos.y - center_chunk.y;
             rel_x * rel_x + rel_z * rel_z
         });
-
-        let mut receiver = self.level.receive_chunks(chunks.clone());
+        self.level
+            .pending_generations
+            .calculate_priority(center_chunk);
+        let mut receiver = self
+            .level
+            .receive_chunks_with_priority(chunks_with_priority.clone());
 
         let level = self.level.clone();
         let player1 = player.clone();
@@ -2044,7 +2058,10 @@ impl World {
             }
 
             #[cfg(debug_assertions)]
-            log::debug!("Chunks queued after {}ms", inst.elapsed().as_millis());
+            log::debug!(
+                "Entity Chunks queued after {}ms",
+                inst.elapsed().as_millis()
+            );
         });
     }
 
