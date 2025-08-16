@@ -3186,7 +3186,16 @@ impl pumpkin_world::world::SimpleWorld for World {
         block_state_id: BlockStateId,
         flags: BlockFlags,
     ) -> BlockStateId {
-        Self::set_block_state(&self, position, block_state_id, flags).await
+        if self
+            .level
+            .try_get_chunk(&position.chunk_and_chunk_relative_position().0)
+            .is_some()
+        {
+            Self::set_block_state(&self, position, block_state_id, flags).await
+        } else {
+            println!("Chunk not loaded, skipping block state update");
+            block_state_id
+        }
     }
 
     async fn update_neighbor(self: Arc<Self>, neighbor_block_pos: &BlockPos, source_block: &Block) {
